@@ -1,0 +1,48 @@
+{
+	"name": "@scrolllapp/straw",
+	"author": "Paul Gordon",
+	"description": "A static site generator for those who can't get enough of RawJS",
+	"version": "1.0.4",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/paul-go/straw"
+	},
+	"bugs": {
+		"url": "https://github.com/paul-go/straw/issues"
+	},
+	"main": "straw.js",
+	"browser": "straw.js",
+	"module": "straw.esm.js",
+	"types": "straw.d.ts",
+	"bin": "straw-cli.js",
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"LICENSE.txt",
+		"straw.js",
+		"straw.d.ts",
+		"straw.d.ts.map",
+		"straw.esm.js",
+		"straw-cli.js"
+	],
+	"scripts": {
+		"test": "exit 0",
+		"esm-core": "sed 's/\\/\\/+ //' ./+build/straw.js > ./+build/straw.esm.js",
+		"bundle-core": "cd core && tsc -p tsconfig.release.json && cd .. && npm run esm-core",
+		"bundle-cli": "cd cli && tsc -p tsconfig.json && terser ./+build/straw.js > ./+build/straw.min.js && npm run esm",
+		"bundle": "npm run bundle-core && npm run bundle-cli",
+		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
+	},
+	"dependencies": {
+		"@scrollapp/rawjs": "^1.2.0",
+		"@silvia-odwyer/photon-node": "^0.3.3",
+		"crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
+		"fila-node": "^1.0.2",
+		"happy-dom": "^12.10.3"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10.2"
+	}
+}
