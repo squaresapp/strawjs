@@ -81,6 +81,15 @@ namespace Straw
 			{
 				this.em.tag(name, attributes, e.nodeValue || "");
 			}
+			// The <pre> element needs to be special cased
+			// because of specific formatting requirements.
+			else if (name === "pre")
+			{
+				this.em.open(name, attributes);
+				const inlineHtml = this.recurseInline(e);
+				this.em.inline(inlineHtml);
+				this.em.close(name);
+			}
 			else if (isInline(name))
 			{
 				const em = new HtmlEmitter(this.em.options);
