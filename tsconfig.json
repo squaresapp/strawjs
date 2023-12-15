@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"outFile": "+build/straw.debug.js",
+		"outFile": "+build/straw.js",
 		"composite": true,
 		"module": "system",
 		"moduleResolution": "node",

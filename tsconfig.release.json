@@ -1,9 +1,0 @@
-{
-	"extends": "./tsconfig.json",
-	"compilerOptions": {
-		"outFile": "+build/straw.js"
-	},
-	"exclude": [
-		"**/*.cover.*"
-	]
-}

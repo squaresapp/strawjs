@@ -13,9 +13,7 @@
 	},
 	"main": "straw.js",
 	"browser": "straw.js",
-	"module": "straw.esm.js",
 	"types": "straw.d.ts",
-	"bin": "straw-cli.js",
 	"publishConfig": {
 		"access": "public"
 	},
@@ -24,15 +22,11 @@
 		"straw.js",
 		"straw.d.ts",
 		"straw.d.ts.map",
-		"straw.esm.js",
-		"straw-cli.js"
+		"straw.min.js"
 	],
 	"scripts": {
 		"test": "exit 0",
-		"esm-core": "sed 's/\\/\\/+ //' ./+build/straw.js > ./+build/straw.esm.js",
-		"bundle-core": "cd core && tsc -p tsconfig.release.json && cd .. && npm run esm-core",
-		"bundle-cli": "cd cli && tsc -p tsconfig.json && terser ./+build/straw.js > ./+build/straw.min.js && npm run esm",
-		"bundle": "npm run bundle-core && npm run bundle-cli",
+		"bundle": "tsc -p tsconfig.json && terser ./+build/straw.js > ./+build/straw.min.js",
 		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
 	},
 	"dependencies": {
