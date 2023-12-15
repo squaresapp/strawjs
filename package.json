@@ -1,5 +1,5 @@
 {
-	"name": "@scrolllapp/straw",
+	"name": "strawjs",
 	"author": "Paul Gordon",
 	"description": "A static site generator for those who can't get enough of RawJS",
 	"version": "1.0.4",
