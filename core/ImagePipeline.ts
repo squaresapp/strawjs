@@ -106,7 +106,8 @@ namespace Straw
 					height = originalHeight;
 				}
 				
-				photonImage = photon.resize(photonImage, width, height, 5);
+				if (width !== originalWidth || height !== originalHeight)
+					photonImage = photon.resize(photonImage, width, height, 5);
 				
 				if (marker.grayscale)
 					photon.grayscale(photonImage);
@@ -172,7 +173,7 @@ namespace Straw
 		{
 			const crc = require("crc-32") as typeof import("crc-32");
 			const contents = new Uint8Array(await fila.readBinary());
-			const num = crc.buf(contents);
+			const num = crc.buf(contents) + (2 ** 32 / 2);
 			return num.toString(36);
 		}
 	}

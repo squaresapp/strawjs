@@ -1,6 +1,8 @@
 
 namespace Straw
 {
+	export type PageParam = Element | Element[] | string | string[];
+	
 	/** */
 	export class Site
 	{
@@ -20,7 +22,7 @@ namespace Straw
 		}
 		
 		/** */
-		page(path: string, ...params: (HTMLElement | string)[])
+		page(path: string, ...params: PageParam[])
 		{
 			let page = this._pages.get(path);
 			if (!page)
@@ -38,7 +40,7 @@ namespace Straw
 			}
 			
 			// Is this going to handle strings alright?
-			for (const param of params)
+			for (const param of params.flat())
 				page.body.append(param);
 			
 			return page;
@@ -105,6 +107,7 @@ namespace Straw
 			
 			for (const [path, page] of this._pages)
 			{
+				this.hoistMetaElements(page.documentElement);
 				await this.scanForImages(page.documentElement);
 				
 				const htmlContent = executeEmit({ doctype: true }, page.documentElement);
@@ -115,6 +118,19 @@ namespace Straw
 				
 				await fila.writeText(htmlContent);
 			}
+		}
+		
+		/** */
+		private hoistMetaElements(container: HTMLElement)
+		{
+			const doc = container.ownerDocument;
+			const metaQuery = doc.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
+			const metaElements: Element[] = [];
+			
+			for (let i = -1;  ++i < metaQuery.length;)
+				metaElements.push(metaQuery[i]);
+			
+			doc.head.append(...metaElements);
 		}
 		
 		/** */

@@ -27,3 +27,5 @@ namespace Straw
 	g.raw = new Raw(g.document);
 	g.straw = new Straw.Site();
 }
+
+const t = raw.text.bind(raw);

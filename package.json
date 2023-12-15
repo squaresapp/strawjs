@@ -36,7 +36,7 @@
 		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
 	},
 	"dependencies": {
-		"@scrollapp/rawjs": "^1.2.0",
+		"@scrollapp/rawjs": "^1.3.3",
 		"@silvia-odwyer/photon-node": "^0.3.3",
 		"crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
 		"fila-node": "^1.0.2",

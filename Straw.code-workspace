@@ -28,7 +28,7 @@
 				"name": "Debug",
 				"type": "node",
 				"request": "launch",
-				"cwd": "${workspaceFolder}/+sample",
+				"cwd": "${workspaceFolder}/+winstafeed",
 				"program": "${workspaceFolder}/+build/straw.debug.js",
 				"sourceMaps": true,
 			}
@@ -59,17 +59,6 @@
 					"isDefault": true
 				},
 				"isBackground": true
-			},
-			{
-				"label": "Set Active Cover Function",
-				"type": "shell",
-				"command": "node",
-				"args": [
-					"${workspaceFolder}/node_modules/moduless/build/moduless.js",
-					"set",
-					"${file}:${lineNumber}"
-				],
-				"problemMatcher": []
 			}
 		]
 	}
