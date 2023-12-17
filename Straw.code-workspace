@@ -28,10 +28,19 @@
 				"name": "Debug",
 				"type": "node",
 				"request": "launch",
-				"cwd": "${workspaceFolder}/+winstafeed",
+				"cwd": "${workspaceFolder}/cover/",
 				"program": "${workspaceFolder}/+build/straw.debug.js",
 				"sourceMaps": true,
-			}
+			},
+			{
+				"name": "Debug Active Cover Function (Node.js)",
+				"type": "node",
+				"request": "launch",
+				"cwd": "${workspaceFolder}",
+				"program": "${workspaceFolder}/../Moduless/build/moduless.js",
+				"sourceMaps": true,
+				"timeout": 2000
+			},
 		]
 	},
 	"tasks": {
@@ -59,6 +68,17 @@
 					"isDefault": true
 				},
 				"isBackground": true
+			},
+			{
+				"label": "Set Active Cover Function",
+				"type": "shell",
+				"command": "node",
+				"args": [
+					"${workspaceFolder}/node_modules/moduless/build/moduless.js",
+					"set",
+					"${file}:${lineNumber}"
+				],
+				"problemMatcher": []
 			}
 		]
 	}

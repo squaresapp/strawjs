@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"outFile": "+build/straw.js",
+		"outFile": "+build/straw.debug.js",
 		"composite": true,
 		"module": "system",
 		"moduleResolution": "node",
@@ -29,6 +29,7 @@
 		"node_modules/@scrollapp/fila-*/fila-*.ts",
 		"core/**/*.ts",
 		"core/**/*.tsx",
-		"core/X.ts"
+		"core/X.ts",
+		"cover/**/*.ts"
 	]
 }
