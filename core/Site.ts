@@ -223,16 +223,16 @@ namespace Straw
 		}
 		
 		/** */
-		private hoistMetaElements(container: HTMLElement)
+		private hoistMetaElements(docElement: HTMLHtmlElement)
 		{
-			const doc = container.ownerDocument;
-			const metaQuery = doc.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
+			const metaQuery = docElement.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
 			const metaElements: Element[] = [];
 			
 			for (let i = -1;  ++i < metaQuery.length;)
 				metaElements.push(metaQuery[i]);
 			
-			doc.head.append(...metaElements);
+			const head = docElement.querySelector("head") as HTMLHeadElement;
+			head.append(...metaElements);
 		}
 		
 		/** */
