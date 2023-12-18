@@ -26,7 +26,7 @@
 	],
 	"scripts": {
 		"test": "exit 0",
-		"bundle": "tsc -p tsconfig.json && terser ./+build/straw.js > ./+build/straw.min.js",
+		"bundle": "tsc -p tsconfig.release.json && terser ./+build/straw.js > ./+build/straw.min.js",
 		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
 	},
 	"dependencies": {
