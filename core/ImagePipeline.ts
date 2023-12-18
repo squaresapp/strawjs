@@ -195,5 +195,5 @@ namespace Straw
 	
 	const imagePrefix = "straw-local://";
 	const imageSuffix = "###";
-	const imageExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"];
+	const imageExtensions = [".gif", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".bmp", ".svg"];
 }
