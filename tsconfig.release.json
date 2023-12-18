@@ -4,6 +4,6 @@
 		"outFile": "+build/straw.js"
 	},
 	"exclude": [
-		"cover/**/*.ts",
+		"cover/**/*.ts"
 	]
 }
