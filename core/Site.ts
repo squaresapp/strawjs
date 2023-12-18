@@ -2,14 +2,13 @@
 namespace Straw
 {
 	export type PageParam = Element | Element[] | string | string[];
+	let photon: typeof import("@silvia-odwyer/photon-node");
 	
 	/** */
 	export class Site
 	{
 		/** */
 		constructor() { }
-		
-		private imagePipeline: ImagePipeline | null = null;
 		
 		/**
 		 * Generates a favicon using the source image at the specified path,
@@ -53,11 +52,15 @@ namespace Straw
 			if (!page)
 			{
 				const doc = window.document;
+				const documentElement = doc.createElement("html")
+				const head = doc.createElement("head");
+				const body = doc.createElement("body");
+				documentElement.append(head, body);
 				
 				page = {
-					documentElement: doc.documentElement as HTMLHtmlElement,
-					body: doc.body as HTMLBodyElement,
-					head: doc.head as HTMLHeadElement,
+					documentElement,
+					body,
+					head,
 					path: process.cwd()
 				};
 				
@@ -81,7 +84,7 @@ namespace Straw
 		/** */
 		image(base: string, options: ImageOptions = {})
 		{
-			return ImagePipeline.createReference(base, options);
+			return createReference(base, options);
 		}
 		
 		/**
@@ -123,12 +126,8 @@ namespace Straw
 			const config = await readPackageJson();
 			const outRoot = root.down(config.straw.out);
 			const imagesRoot = root.down(config.straw.images);
+			const imagesOutputRoot = outRoot.down(Folder.images);
 			const staticRoot = root.down(config.straw.static);
-			
-			if (!this.imagePipeline)
-				this.imagePipeline = new ImagePipeline(
-					imagesRoot,
-					outRoot.down(Folder.images));
 			
 			// These elements should be written later			
 			const metaElements = new Map<string, HTMLElement[]>();
@@ -180,7 +179,11 @@ namespace Straw
 			
 			for (const post of this._posts.values())
 			{
-				await this.scanForImages(...post.sections);
+				await this.scanForImages(
+					imagesRoot,
+					outRoot,
+					...post.sections);
+				
 				const htmlContent = executeEmit({ doctype: true }, ...post.sections);
 				
 				let fila = outRoot.down(post.path);
@@ -193,7 +196,10 @@ namespace Straw
 			for (const [path, page] of this._pages)
 			{
 				this.hoistMetaElements(page.documentElement);
-				await this.scanForImages(page.documentElement);
+				await this.scanForImages(
+					imagesRoot,
+					outRoot,
+					page.documentElement);
 				
 				const elementsToInject = metaElements.get(path);
 				if (elementsToInject)
@@ -230,7 +236,10 @@ namespace Straw
 		}
 		
 		/** */
-		private async scanForImages(...containers: HTMLElement[])
+		private async scanForImages(
+			imagesRoot: Fila,
+			outputRoot: Fila,
+			...containers: HTMLElement[])
 		{
 			for (const container of containers)
 			{
@@ -256,7 +265,11 @@ namespace Straw
 						if (!attr || !attr.value)
 							continue;
 						
-						const parsed = await this.imagePipeline?.replaceReference(attr.value);
+						const parsed = await this.replaceReference(
+							imagesRoot,
+							outputRoot,
+							attr.value);
+						
 						if (parsed)
 							attr.value = parsed.replacedValue;
 					}
@@ -264,12 +277,120 @@ namespace Straw
 					for (const property of Straw.cssPropertiesWithUrls)
 					{
 						const val = e.style.getPropertyValue(property);
-						const parsed = await this.imagePipeline?.replaceReference(val);
+						const parsed = await this.replaceReference(
+							imagesRoot,
+							outputRoot,
+							val);
+						
 						if (parsed)
 							e.style.setProperty(property, parsed.replacedValue);
 					}
 				}
 			}
+		}
+		
+		/** */
+		private async replaceReference(
+			imagesRoot: Fila,
+			outputRoot: Fila,
+			reference: string)
+		{
+			const start = reference.indexOf(imagePrefix);
+			if (start < 0)
+				return null;
+			
+			const end = reference.indexOf(imageSuffix, start);
+			const base64Text = reference.slice(start + imagePrefix.length, end);
+			const clearText = atob(base64Text);
+			const marker: ImageMarker = tryParseJson(clearText)!;
+			const base = (() =>
+			{
+				for (const ext of imageExtensions)
+					if (marker.base.endsWith(ext))
+						return marker.base.slice(0, -ext.length);
+				
+				return marker.base;
+			})();
+			
+			const imageFila = await findImage(imagesRoot, marker.base);
+			if (!imageFila)
+			{
+				console.error("Image could not be resolved: " + marker.base);
+				debugger;
+				return null;
+			}
+			
+			const imageCrc = await computeFileCrc(imageFila);
+			const parts = [base, imageCrc];
+			
+			if (marker.width)
+				parts.push(marker.width + "w");
+			
+			if (marker.height)
+				parts.push(marker.height + "h");
+			
+			if (marker.grayscale)
+				parts.push("g");
+			
+			if (marker.blur)
+				parts.push(marker.blur + "b");
+			
+			const finalFileName = parts.join(".") + imageFila.extension;
+			const finalFila = outputRoot.down(finalFileName);
+			
+			if (!await finalFila.exists())
+			{
+				photon ||= require("@silvia-odwyer/photon-node");
+				
+				const bytes = new Uint8Array(await imageFila.readBinary());
+				let photonImage = photon.PhotonImage.new_from_byteslice(bytes);
+				const originalWidth = photonImage.get_width();
+				const originalHeight = photonImage.get_height();
+				const ratio = originalWidth / originalHeight;
+				
+				let width = 0;
+				let height = 0;
+				
+				if (marker.width && !marker.height)
+				{
+					width = marker.width;
+					height = marker.width / ratio;
+				}
+				else if (!marker.width && marker.height)
+				{
+					width = marker.height * ratio;
+					height = marker.height;
+				}
+				else if (marker.width && marker.height)
+				{
+					width = marker.width;
+					height = marker.height
+				}
+				else
+				{
+					width = originalWidth;
+					height = originalHeight;
+				}
+				
+				if (width !== originalWidth || height !== originalHeight)
+					photonImage = photon.resize(photonImage, width, height, 5);
+				
+				if (marker.grayscale)
+					photon.grayscale(photonImage);
+				
+				if (marker.blur)
+					photon.gaussian_blur(photonImage, marker.blur);
+				
+				await finalFila.writeBinary(photonImage.get_bytes());
+			}
+			
+			const replacedValue = 
+				reference.slice(0, start) +
+				Folder.images +
+				finalFileName +
+				reference.slice(end + imageSuffix.length);
+			
+			return { marker, replacedValue };
 		}
 	}
 	
@@ -309,6 +430,88 @@ namespace Straw
 		
 		/** */
 		readonly icon: string;
+	}
+	
+	/** */
+	export interface ImageOptions
+	{
+		width?: number;
+		height?: number;
+		grayscale?: boolean;
+		blur?: number;
+	}
+	
+	/** */
+	export interface ImageMarker extends ImageOptions
+	{
+		base: string;
+	}
+	
+	/**
+	 * 
+	 */
+	function createReference(base: string, options: ImageOptions)
+	{
+		const marker: ImageMarker = { base, ...options };
+		
+		return (
+			imagePrefix + 
+			btoa(JSON.stringify(marker)) + 
+			imageSuffix
+		);
+	}
+	
+	const imagePrefix = "straw-local://";
+	const imageSuffix = "###";
+	const imageExtensions = [".gif", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".bmp", ".svg"];
+	
+	/** */
+	async function findImage(searchRoot: Fila, fileBaseName: string)
+	{
+		const queue = await searchRoot.readDirectory();
+		const hasExtension = imageExtensions.some(e => fileBaseName.endsWith(e));
+		
+		// If "base" has a slash in it, then it's treated assumed to be an absolute path.
+		if (fileBaseName.includes("/"))
+		{
+			if (hasExtension)
+			{
+				const fila = searchRoot.down(fileBaseName);
+				if (await fila.exists())
+					return fila;
+			}
+			else for (const fila of imageExtensions.map(e => searchRoot.down(fileBaseName)))
+				if (await fila.exists())
+					return fila;
+		}
+		
+		while (queue.length)
+		{
+			const fila = queue.shift();
+			if (!fila)
+				return null;
+			
+			if (await fila.isDirectory())
+				queue.push(...await fila.readDirectory());
+			
+			if (hasExtension)
+			{
+				if (fila.name === fileBaseName)
+					return fila;
+			}
+			else if (imageExtensions.map(e => fileBaseName + e).some(s => s === fila.name))
+				return fila;
+		}
+		return null;
+	}
+	
+	/** */
+	async function computeFileCrc(fila: Fila)
+	{
+		const crc = require("crc-32") as typeof import("crc-32");
+		const contents = new Uint8Array(await fila.readBinary());
+		const num = crc.buf(contents) + (2 ** 32 / 2);
+		return num.toString(36);
 	}
 	
 	/**
