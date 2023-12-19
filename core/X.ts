@@ -10,7 +10,7 @@ namespace Straw
 	// even though its not exported.
 	type F = typeof import("fila-core");
 	
-	const { Raw } = require("@scrollapp/rawjs") as typeof import("@scrollapp/rawjs");
+	const { Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
 	
 	for (const name of Straw.cssProperties)
 		if (!Raw.properties.has(name))
