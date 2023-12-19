@@ -239,7 +239,7 @@ namespace Straw
 			let width = 0;
 			let height = 0;
 			let blur = 0;
-			let gray = true;
+			let gray = false;
 			
 			const parts = url.split(imageParamsSplit);
 			name = parts[0];
