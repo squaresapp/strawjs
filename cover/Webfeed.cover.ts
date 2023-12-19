@@ -13,15 +13,20 @@ namespace Cover
 			
 			raw.div(
 				"class-1 class-2",
-				raw.img("img-cls", { src: straw.image("example.jpg", { width: 300 }) }),
+				//raw.img("img-cls", { src: "img.example?width=300" }),
+				raw.img("img-cls", { src: "img.twitter" }),
 				raw.div(
 					"div-img",
 					{
-						backgroundImage: `url(${ straw.image("example", { width: 400 }) })`
+						backgroundImage: `url(img.example?width=400)`
 					}
 				),
 				raw.a("anchor", { href: "/privacy" }),
 			)
+		);
+		
+		straw.page("/privacy",
+			raw.h1(raw.text("Privacy Policy"))
 		);
 		
 		straw.post("/webfeed/post1", new Date(2023, 0, 1),
