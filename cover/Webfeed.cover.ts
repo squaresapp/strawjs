@@ -13,12 +13,12 @@ namespace Cover
 			
 			raw.div(
 				"class-1 class-2",
-				//raw.img("img-cls", { src: "img.example?width=300" }),
+				raw.img("img-cls", { src: "img.example?width=300" }),
 				raw.img("img-cls", { src: "img.twitter" }),
 				raw.div(
 					"div-img",
 					{
-						backgroundImage: `url(img.example?width=400)`
+						backgroundImage: `url(img.button-apple-store)`
 					}
 				),
 				raw.a("anchor", { href: "/privacy" }),

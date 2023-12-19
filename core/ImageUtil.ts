@@ -216,13 +216,14 @@ namespace Straw
 	{
 		const files: ImageParams[] = [];
 		const urls: { url: string; start: number, end: number }[] = [];
-		const reg = /url\("?([/A-Za-z0-9\.]+\?[a-z=\,\d+]+)"?\)/g;
+		const reg = /url\("?([/A-Za-z0-9\.\-\_]+(\?[a-z=\,\d+]+)?)"?\)/g;
 		
 		if (value.includes("url("))
 		{
 			let lastEnd = 0;
+			const matches = value.matchAll(reg);
 			
-			for (const match of value.matchAll(reg))
+			for (const match of matches)
 			{
 				const url = match[1];
 				const start = value.indexOf(url, lastEnd);
