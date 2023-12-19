@@ -3,7 +3,9 @@ namespace Straw
 {
 	let photon: typeof import("@silvia-odwyer/photon-node");
 	
-	/** */
+	/**
+	 * @internal
+	 */
 	export class ImagePipeline
 	{
 		/** */
