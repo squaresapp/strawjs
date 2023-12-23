@@ -27,7 +27,7 @@ namespace Straw
 	 * An enumeration that stores the well-known folders
 	 * within Straw.
 	 */
-	export const enum Folder
+	export const enum SiteFolder
 	{
 		resources = "/resources/",
 		scripts = "/resources/scripts/",
@@ -35,6 +35,15 @@ namespace Straw
 		images = "/resources/images/",
 		fonts = "/resources/fonts/",
 		css = "/resources/css/",
-		static = "/resources/static/",
+	}
+	
+	/**
+	 * 
+	 */
+	export const enum ProjectFolder
+	{
+		site = "/site/",
+		source = "/source/",
+		static = "/static/",
 	}
 }

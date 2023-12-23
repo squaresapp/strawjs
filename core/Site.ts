@@ -104,8 +104,11 @@ namespace Straw
 			return script;
 		}
 		
-		/** */
-		async emit()
+		/**
+		 * Emits the output to an optionally specified folder, which is relative
+		 * to the current working directory.
+		 */
+		async emit(folder = "")
 		{
 			if (!hasInit)
 			{
@@ -115,26 +118,23 @@ namespace Straw
 				(require("fila-node") as typeof import("fila-node")).FilaNode.use();
 			}
 			
-			const root = Fila.new(process.cwd());
-			const config = await readPackageJson();
-			const outRoot = root.down(config.straw.out);
-			const staticRoot = root.down(config.straw.static);
-			
-			const imagePipeline = new ImagePipeline(
-				root.down(config.straw.images),
-				outRoot);
+			const root = Fila.new(process.cwd()).down(folder);
+			const siteRoot = root.down(ProjectFolder.site);
+			const sourceRoot = root.down(ProjectFolder.source);
+			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
+			const imagePipeline = new ImagePipeline(sourceRoot, imagesSaveRoot);
 			
 			// These elements should be written later			
 			const metaElements = new Map<string, HTMLElement[]>();
 			
 			for (const feedOptions of this._feeds.values())
 			{
-				const feedFolder = outRoot.down(feedOptions.root);
+				const feedFolder = siteRoot.down(feedOptions.root);
 				const feedIndexFile = feedFolder.down("index.txt");
 				const posts: Post[] = [];
 				
 				for (const [path, post] of this._posts)
-					if( outRoot.down(path).path.startsWith(feedFolder.path))
+					if( siteRoot.down(path).path.startsWith(feedFolder.path))
 						posts.push(post);
 				
 				const index = posts
@@ -177,7 +177,7 @@ namespace Straw
 				await imagePipeline.adjust(...post.sections);
 				const htmlContent = executeEmit({ doctype: true }, ...post.sections);
 				
-				let fila = outRoot.down(post.path);
+				let fila = siteRoot.down(post.path);
 				if (!fila.name.endsWith(".html"))
 					fila = fila.down("index.html");
 				
@@ -202,12 +202,17 @@ namespace Straw
 				
 				const htmlContent = executeEmit({ doctype: true }, page.documentElement);
 				
-				let fila = outRoot.down(path);
+				let fila = siteRoot.down(path);
 				if (!fila.name.endsWith(".html"))
 					fila = fila.down("index.html");
 				
 				await fila.writeText(htmlContent);
 			}
+			
+			// Create the /static folder within the site if necessary
+			const sourceStaticFolder = root.down(ProjectFolder.static);
+			const destStaticFolder = siteRoot.down(ProjectFolder.static);
+			await destStaticFolder.writeSymlink(sourceStaticFolder);
 		}
 		
 		/** */
@@ -260,43 +265,5 @@ namespace Straw
 		
 		/** */
 		readonly icon: string;
-	}
-	
-	/**
-	 * Reads the relavant content from the package.json file
-	 * located within the current working directory.
-	 */
-	async function readPackageJson()
-	{
-		const packageJson: IPackageJson = {
-			straw: {
-				images: ".",
-				out: "./site/",
-				static: "./static/",
-			}
-		};
-		
-		const root = Fila.new(process.cwd());
-		const packageFila = root.down("package.json");
-		
-		if (await packageFila.exists())
-		{
-			const packageJsonText = await root.down("package.json").readText();
-			
-			const json = Straw.tryParseJson<IPackageJson>(packageJsonText);
-			if (json?.straw)
-			{
-				if (json.straw.images && typeof json.straw.images === "string")
-					packageJson.straw.images = json.straw.images;
-				
-				if (json.straw.out && typeof json.straw.out === "string")
-					packageJson.straw.out = json.straw.out;
-				
-				if (json.straw.static && typeof json.straw.static === "string")
-					packageJson.straw.static = json.straw.static;
-			}
-		}
-		
-		return packageJson;
 	}
 }

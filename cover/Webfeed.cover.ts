@@ -48,7 +48,7 @@ namespace Cover
 			icon: "icon",
 		});
 		
-		setTimeout(() => straw.emit());
+		setTimeout(() => straw.emit("cover/+sample"));
 	}
 }
 

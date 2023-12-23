@@ -28,7 +28,7 @@
 				"name": "Debug",
 				"type": "node",
 				"request": "launch",
-				"cwd": "${workspaceFolder}/cover/",
+				"cwd": "${workspaceFolder}",
 				"program": "${workspaceFolder}/+build/straw.debug.js",
 				"sourceMaps": true,
 			},

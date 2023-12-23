@@ -11,12 +11,8 @@ namespace Straw
 		/** */
 		constructor(
 			private readonly imageSearchRoot: Fila,
-			outputRoot: Fila)
-		{
-			this.imagesFolder = outputRoot.down(Folder.images);
-		}
-		
-		private readonly imagesFolder: Fila;
+			private readonly imageSaveRoot: Fila)
+		{ }
 		
 		/**
 		 * Scans the specified top-level HTML elements, and their nested elements,
@@ -77,7 +73,7 @@ namespace Straw
 			if (imageFila.extension === ".svg")
 			{
 				finalFileName = parts.join(".") + imageFila.extension;
-				await imageFila.copy(this.imagesFolder.down(finalFileName));
+				await imageFila.copy(this.imageSaveRoot.down(finalFileName));
 			}
 			else
 			{
@@ -94,7 +90,7 @@ namespace Straw
 					parts.push(params.blur + "b");
 				
 				finalFileName = parts.join(".") + imageFila.extension;
-				const finalFila = this.imagesFolder.down(finalFileName);
+				const finalFila = this.imageSaveRoot.down(finalFileName);
 				
 				if (!await finalFila.exists())
 				{
@@ -122,7 +118,7 @@ namespace Straw
 					else if (params.width && params.height)
 					{
 						width = params.width;
-						height = params.height
+						height = params.height;
 					}
 					else
 					{
@@ -143,7 +139,7 @@ namespace Straw
 				}
 			}
 			
-			return Folder.images + finalFileName;
+			return SiteFolder.images + finalFileName;
 		}
 	}
 	
