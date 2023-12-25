@@ -15,7 +15,7 @@ namespace Straw
 		 */
 		init(options: InitOptions)
 		{
-			Straw.init(options);
+			return Straw.init(options);
 		}
 		
 		/**
