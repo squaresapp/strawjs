@@ -10,7 +10,6 @@ namespace Straw
 		constructor() { }
 		
 		/**
-		 * @internal
 		 * Initializes a straw website with the necessary packages installed
 		 * and the default directories required.
 		 */
