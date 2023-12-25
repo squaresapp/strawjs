@@ -12,7 +12,8 @@ namespace Straw
 	}
 	
 	/**
-	 * Initializes a straw website 
+	 * Initializes a straw website with the necessary packages installed
+	 * and the default directories required.
 	 */
 	export async function init(options: InitOptions)
 	{
@@ -29,7 +30,7 @@ namespace Straw
 			}
 		};
 		
-		const packageJsonText = JSON.stringify(packageJson)
+		const packageJsonText = JSON.stringify(packageJson, null, "\t");
 		await initRoot.down("package.json").writeText(packageJsonText);
 		
 		const tsconfig = {
@@ -83,7 +84,9 @@ namespace Straw
 				rl.question("What is the host name of the site? (example: www.example.com)\n", r);
 			});
 			
-			init({ hostname });
+			console.log("Creating...");
+			await init({ hostname });
+			process.exit(0);
 		}
 	});
 }
