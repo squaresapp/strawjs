@@ -107,7 +107,7 @@ namespace Straw
 		await initRoot
 			.down(ProjectFolder.source)
 			.down("Home.ts")
-			.writeText("\n// TODO: Create your home page in this TypeScript file.\n\n");
+			.writeText("\n// TODO: Create your home page in this TypeScript file.\n");
 		
 		const includesVite = cp.execSync("npm list -g vite").toString("utf8").includes("vite@");
 		if (!includesVite)
