@@ -26,6 +26,9 @@ namespace Straw
 	g.Raw = Raw;
 	g.raw = new Raw(g.document);
 	g.straw = new Straw.Site();
+	
+	g.Fila = require("fila-core").Fila;
+	(require("fila-node") as typeof import("fila-node")).FilaNode.use();
 }
 
 const t = raw.text.bind(raw);

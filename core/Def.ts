@@ -42,8 +42,8 @@ namespace Straw
 	 */
 	export const enum ProjectFolder
 	{
-		site = "/site/",
-		source = "/source/",
-		static = "/static/",
+		site = "site/",
+		source = "source/",
+		static = "static/",
 	}
 }

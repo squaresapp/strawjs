@@ -110,14 +110,6 @@ namespace Straw
 		 */
 		async emit(folder = "")
 		{
-			if (!hasInit)
-			{
-				hasInit = true;
-				const g = globalThis as any;
-				g.Fila = require("fila-core").Fila;
-				(require("fila-node") as typeof import("fila-node")).FilaNode.use();
-			}
-			
 			const root = Fila.new(process.cwd()).down(folder);
 			const siteRoot = root.down(ProjectFolder.site);
 			const sourceRoot = root.down(ProjectFolder.source);
@@ -228,8 +220,6 @@ namespace Straw
 			head.append(...metaElements);
 		}
 	}
-	
-	let hasInit = false;
 	
 	/** */
 	export interface Page
