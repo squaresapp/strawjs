@@ -104,6 +104,11 @@ namespace Straw
 		const codeWorkspaceJsonText = JSON.stringify(codeWorkspace, null, "\t");
 		await initRoot.down(siteName + ".code-workspace").writeText(codeWorkspaceJsonText);
 		
+		await initRoot
+			.down(ProjectFolder.source)
+			.down("Home.ts")
+			.writeText("\n// TODO: Create your home page in this TypeScript file.\n\n");
+		
 		const includesVite = cp.execSync("npm list -g vite").toString("utf8").includes("vite@");
 		if (!includesVite)
 			cp.execSync("npm install vite -g");
