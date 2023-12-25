@@ -110,7 +110,14 @@ namespace Straw
 			.down("Home.ts")
 			.writeText("\n// TODO: Create your home page in this TypeScript file.\n");
 		
-		const includesVite = cp.execSync("npm list -g vite").toString("utf8").includes("vite@");
+		let includesVite = false;
+		
+		try
+		{
+			includesVite = cp.execSync("npm list -g vite").toString("utf8").includes("vite@");
+		}
+		catch (e) { }
+		
 		if (!includesVite)
 			cp.execSync("npm install vite -g");
 		
