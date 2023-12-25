@@ -51,8 +51,58 @@ namespace Straw
 			include: [ProjectFolder.source + "**/*.ts"]
 		}
 		
-		const jsonText = JSON.stringify(tsconfig, null, "\t");
-		await initRoot.down("tsconfig.json").writeText(jsonText);
+		const tsconfigJsonText = JSON.stringify(tsconfig, null, "\t");
+		await initRoot.down("tsconfig.json").writeText(tsconfigJsonText);
+		
+		const codeWorkspace = {
+			folders: [{ path: "." }],
+			settings: {
+				"files.exclude": {
+					"**/.git": true,
+					"**/.DS_Store": true,
+					"**/node_modules": true,
+					"**/package-lock.json": true,
+					[siteName + ".*"]: true,
+				},
+				"search.exclude": {
+					"**/.git": true,
+					"**/.DS_Store": true,
+					"**/node_modules": true,
+					"**/package-lock.json": true,
+					[siteName + ".*"]: true,
+				},
+				"task.allowAutomaticTasks": "on",
+			},
+			launch: {
+				configurations: [
+					{
+						name: "Debug & Build",
+						type: "node",
+						request: "launch",
+						cwd: "${workspaceFolder}",
+						program: "${workspaceFolder}/" + siteName + ".js",
+						sourceMaps: true
+					}
+				]
+			},
+			tasks: {
+				version: "2.0.0",
+				tasks: [{
+					label: "Compile Site",
+					type: "shell",
+					command: "tsc",
+					args: ["--build", "--watch"],
+					options: { cwd: "${workspaceRoot}" },
+					problemMatcher: ["$tsc"],
+					runOptions: { runOn: "folderOpen" },
+					group: { kind: "build", isDefault: true },
+					isBackground: true
+				}]
+			}
+		};
+		
+		const codeWorkspaceJsonText = JSON.stringify(codeWorkspace, null, "\t");
+		await initRoot.down(siteName + ".code-workspace").writeText(codeWorkspaceJsonText);
 		
 		const includesVite = cp.execSync("npm list -g vite").toString("utf8").includes("vite@");
 		if (!includesVite)
@@ -86,6 +136,7 @@ namespace Straw
 			
 			console.log("Creating...");
 			await init({ hostname });
+			console.log("Site created. Now open the generated .code-workspace file.");
 			process.exit(0);
 		}
 	});
