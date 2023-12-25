@@ -25,8 +25,8 @@ namespace Straw
 			name: siteName,
 			version: "1.0.0",
 			scripts: {
-				serve: `"cd ${ProjectFolder.site} && npx vite --no-cors",`,
-				build: `"npm install && tsc && node ./${siteName}.js"`
+				serve: `cd ${ProjectFolder.site} && npx vite --no-cors`,
+				build: `npm install && tsc && node ./${siteName}.js`,
 			}
 		};
 		
