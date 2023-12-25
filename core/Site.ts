@@ -10,6 +10,16 @@ namespace Straw
 		constructor() { }
 		
 		/**
+		 * @internal
+		 * Initializes a straw website with the necessary packages installed
+		 * and the default directories required.
+		 */
+		init(options: InitOptions)
+		{
+			Straw.init(options);
+		}
+		
+		/**
 		 * Generates a favicon using the source image at the specified path,
 		 * and returns the HTMLElement objects that should be included
 		 * in the <head> section of the page to reference the favicon.

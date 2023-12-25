@@ -7,11 +7,12 @@ namespace Straw
 	/** */
 	export interface InitOptions
 	{
+		name: string;
 		path?: string;
-		hostname: string;
 	}
 	
 	/**
+	 * @internal
 	 * Initializes a straw website with the necessary packages installed
 	 * and the default directories required.
 	 */
@@ -19,14 +20,14 @@ namespace Straw
 	{
 		const path = options.path || "";
 		const initRoot = Fila.new(process.cwd()).down(path);
-		const siteName = options.hostname.toLowerCase().replace(/\./g, "-");
+		const name = options.name;
 		
 		const packageJson = {
-			name: siteName,
+			name,
 			version: "1.0.0",
 			scripts: {
 				serve: `cd ${ProjectFolder.site} && npx vite --no-cors`,
-				build: `npm install && tsc && node ./${siteName}.js`,
+				build: `npm install && tsc && node ./${name}.js`,
 			}
 		};
 		
@@ -35,7 +36,7 @@ namespace Straw
 		
 		const tsconfig = {
 			compilerOptions: {
-				outFile: siteName + ".js",
+				outFile: name + ".js",
 				module: "system",
 				moduleResolution: "node",
 				target: "esnext",
@@ -62,14 +63,14 @@ namespace Straw
 					"**/.DS_Store": true,
 					"**/node_modules": true,
 					"**/package-lock.json": true,
-					[siteName + ".*"]: true,
+					[name + ".*"]: true,
 				},
 				"search.exclude": {
 					"**/.git": true,
 					"**/.DS_Store": true,
 					"**/node_modules": true,
 					"**/package-lock.json": true,
-					[siteName + ".*"]: true,
+					[name + ".*"]: true,
 				},
 				"task.allowAutomaticTasks": "on",
 			},
@@ -80,7 +81,7 @@ namespace Straw
 						type: "node",
 						request: "launch",
 						cwd: "${workspaceFolder}",
-						program: "${workspaceFolder}/" + siteName + ".js",
+						program: "${workspaceFolder}/" + name + ".js",
 						sourceMaps: true
 					}
 				]
@@ -102,7 +103,7 @@ namespace Straw
 		};
 		
 		const codeWorkspaceJsonText = JSON.stringify(codeWorkspace, null, "\t");
-		await initRoot.down(siteName + ".code-workspace").writeText(codeWorkspaceJsonText);
+		await initRoot.down(name + ".code-workspace").writeText(codeWorkspaceJsonText);
 		
 		await initRoot
 			.down(ProjectFolder.source)
@@ -134,13 +135,15 @@ namespace Straw
 				output: process.stdout,
 			});
 			
-			const hostname = await new Promise<string>(r =>
+			const name = await new Promise<string>(r =>
 			{
-				rl.question("What is the host name of the site? (example: www.example.com)\n", r);
+				rl.question(
+					"Provide a name for the site:\n" +
+					"(No spaces, no dots. Example: www-example-com)\n", r);
 			});
 			
 			console.log("Creating...");
-			await init({ hostname });
+			await init({ name });
 			console.log("Site created. Now open the generated .code-workspace file.");
 			process.exit(0);
 		}
