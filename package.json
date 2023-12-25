@@ -2,7 +2,7 @@
 	"name": "strawjs",
 	"author": "Paul Gordon",
 	"description": "A static site generator for those who can't get enough of RawJS",
-	"version": "1.0.17",
+	"version": "1.0.18",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -14,6 +14,7 @@
 	"main": "straw.js",
 	"browser": "straw.js",
 	"types": "straw.d.ts",
+	"bin": "straw.js",
 	"publishConfig": {
 		"access": "public"
 	},
