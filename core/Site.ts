@@ -36,7 +36,6 @@ namespace Straw
 				const name = ImageProcessor.getIconFileName(iconFileName, size);
 				const linkTag = raw.link({
 					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
-					type: "image/png",
 					href: SiteFolder.icon + name,
 				});
 				
