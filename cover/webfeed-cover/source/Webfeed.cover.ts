@@ -4,6 +4,8 @@ namespace Cover
 	/** */
 	export async function coverBasic()
 	{
+		const straw = new Straw.Site();
+		
 		straw.page("/",
 			straw.script(() =>
 			{

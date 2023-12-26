@@ -1,21 +1,9 @@
 
-declare const straw: Straw.Site;
-
 namespace Straw
 {
 	const g = globalThis as any;
+	
 	Object.assign(globalThis, require("happy-dom"));
-	
-	// Defining this causes the types for Fila to become visible,
-	// even though its not exported.
-	type F = typeof import("fila-core");
-	
-	const { Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
-	
-	for (const name of Straw.cssProperties)
-		if (!Raw.properties.has(name))
-			Raw.properties.add(name);
-	
 	//@ts-ignore
 	g.window = new Window({
 		url: "https://localhost:8080",
@@ -23,12 +11,35 @@ namespace Straw
 		height: 768,
 	});
 	g.document = g.window.document;
-	g.Raw = Raw;
-	g.raw = new Raw(g.document);
-	g.straw = new Straw.Site();
 	
+	// Defining this causes the types for Fila to become visible,
+	// even though its not exported.
+	type F = typeof import("fila-core");
 	g.Fila = require("fila-core").Fila;
-	(require("fila-node") as typeof import("fila-node")).FilaNode.use();
+	require("fila-node").FilaNode.use();
+	
+	const { Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
+	
+	for (const name of Straw.cssProperties)
+		if (!Raw.properties.has(name))
+			Raw.properties.add(name);
+	
+	const straw = new Straw.Site();
+	const raw = new Raw(g.document);
+	const t = raw.text.bind(raw);
+	
+	Object.assign(module.exports, { straw, Straw, raw, Raw, t });
 }
 
-const t = raw.text.bind(raw);
+declare module "strawjs"
+{
+	const __export: {
+		straw: Straw.Site,
+		Straw: typeof Straw,
+		raw: Raw,
+		Raw: typeof Raw,
+		t: Raw["text"],
+	};
+	
+	export = __export;
+}

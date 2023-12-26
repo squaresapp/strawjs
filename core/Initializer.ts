@@ -107,8 +107,13 @@ namespace Straw
 		
 		await initRoot
 			.down(ProjectFolder.source)
+			.down("!.ts")
+			.writeText(`const { straw, Straw, raw, Raw, t } = require("strawjs");\n`);
+		
+		await initRoot
+			.down(ProjectFolder.source)
 			.down("Home.ts")
-			.writeText("\n// TODO: Create your home page in this TypeScript file.\n");
+			.writeText(`\n// TODO: Create your home page in this TypeScript file.\n`);
 		
 		let includesVite = false;
 		

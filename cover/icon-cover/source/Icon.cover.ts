@@ -4,6 +4,8 @@ namespace Cover
 	/** */
 	export async function coverIconGeneration()
 	{
+		const straw = new Straw.Site();
+		
 		straw.page("/", 
 			straw.icon("sample-icon.png")
 		);
