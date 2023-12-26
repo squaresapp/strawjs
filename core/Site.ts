@@ -46,7 +46,7 @@ namespace Straw
 		feed(options: IFeedOptions)
 		{
 			options = Object.assign({ index: "index.txt" }, options);
-			this._feeds.set(options.root, options);
+			this._feeds.set(options.root || ".", options);
 		}
 		
 		private readonly _feeds = new Map<string, Straw.IFeedOptions>();
@@ -130,7 +130,7 @@ namespace Straw
 			
 			for (const feedOptions of this._feeds.values())
 			{
-				const feedFolder = siteRoot.down(feedOptions.root);
+				const feedFolder = siteRoot.down(feedOptions.root || ".");
 				const feedIndexFile = feedFolder.down("index.txt");
 				const posts: Post[] = [];
 				
@@ -163,7 +163,7 @@ namespace Straw
 				
 				if (this._pages.has(feedFolder.path))
 				{
-					metaElements.set(feedOptions.root, elements);
+					metaElements.set(feedOptions.root || ".", elements);
 				}
 				else
 				{
@@ -252,9 +252,11 @@ namespace Straw
 	{
 		/**
 		 * Stores the root path of the webfeed, where the index.txt file is located,
-		 * and where to look to capture all nested webfeed posts.
+		 * and where to look to capture all nested webfeed posts. Specify a path
+		 * that is relative to the working directory. If omitted, the path that is used
+		 * is the working directory.
 		 */
-		readonly root: string;
+		readonly root?: string;
 		
 		/** */
 		readonly author: string;
