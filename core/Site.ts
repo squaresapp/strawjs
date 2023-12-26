@@ -149,7 +149,7 @@ namespace Straw
 				// corresponding index.txt file, which has the feed meta data. However,
 				// we don't want to just drop this here, because there could be another
 				// index.html file and we don't want to override it. So instead, we just
-				// write the meta elements to a map, and 
+				// write the meta elements to a map.
 				
 				const elements: HTMLElement[] = [
 					raw.meta({ name: "author", content: feedOptions.author }),
