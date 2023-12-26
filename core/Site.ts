@@ -7,7 +7,17 @@ namespace Straw
 	export class Site
 	{
 		/** */
-		constructor() { }
+		constructor()
+		{
+			//@ts-ignore
+			this.window = new Window({ url: "https://localhost:8080", width: 1024, height: 768 });
+			this.document = this.window.document;
+			this.raw = new Raw(this.document);
+		}
+		
+		readonly raw: Raw;
+		readonly document: Document;
+		readonly window: Window;
 		
 		/**
 		 * Initializes a straw website with the necessary packages installed
@@ -34,7 +44,7 @@ namespace Straw
 			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
 			{
 				const name = ImageProcessor.getIconFileName(iconFileName, size);
-				const linkTag = raw.link({
+				const linkTag = this.raw.link({
 					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
 					href: SiteFolder.icon + name,
 				});
@@ -125,14 +135,14 @@ namespace Straw
 			if (typeof arg === "string")
 			{
 				if (["http:", "https:", "file:"].some(s => arg.startsWith(s)))
-					return raw.script({ src: arg });
+					return this.raw.script({ src: arg });
 				
-				return raw.script(raw.text(arg));
+				return this.raw.script(this.raw.text(arg));
 			}
 			
 			const fnText = arg.toString().replace(/^\(\)\s*=>/, "");
-			const htmlText = raw.text(fnText);
-			const script = raw.script(htmlText);
+			const htmlText = this.raw.text(fnText);
+			const script = this.raw.script(htmlText);
 			return script;
 		}
 		
@@ -175,8 +185,8 @@ namespace Straw
 				// write the meta elements to a map.
 				
 				const elements: HTMLElement[] = [
-					raw.meta({ name: "author", content: feedOptions.author }),
-					raw.meta({ name: "description", content: feedOptions.description }),
+					this.raw.meta({ name: "author", content: feedOptions.author }),
+					this.raw.meta({ name: "description", content: feedOptions.description }),
 				];
 				
 				if (feedOptions.icon)

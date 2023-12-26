@@ -105,10 +105,17 @@ namespace Straw
 		const codeWorkspaceJsonText = JSON.stringify(codeWorkspace, null, "\t");
 		await initRoot.down(name + ".code-workspace").writeText(codeWorkspaceJsonText);
 		
+		const topFileLines = [
+			`const Straw = require("strawjs") as typeof import("strawjs");`,
+			`const straw = new Straw.Site();`,
+			`const raw = straw.raw;`,
+			`const t = raw.text.bind(raw);`
+		];
+		
 		await initRoot
 			.down(ProjectFolder.source)
 			.down("!.ts")
-			.writeText(`const { straw, Straw, raw, Raw, t } = require("strawjs");\n`);
+			.writeText(topFileLines.map(line => line + "\n").join(""));
 		
 		await initRoot
 			.down(ProjectFolder.source)
