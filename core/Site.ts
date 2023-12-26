@@ -19,14 +19,33 @@ namespace Straw
 		}
 		
 		/**
-		 * Generates a favicon using the source image at the specified path,
-		 * and returns the HTMLElement objects that should be included
+		 * Specifies a favicon to generate during a call to .emit(), using the
+		 * source image. The source directory is searched for an image file
+		 * with the specified name.
+		 * 
+		 * Returns an array of HTMLElement objects that should be included
 		 * in the <head> section of the page to reference the favicon.
 		 */
-		icon(path: string)
+		icon(iconFileName: string)
 		{
-			return [] as HTMLElement[];
+			this.icons.add(iconFileName);
+			const linkTags: HTMLLinkElement[] = [];
+			
+			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
+			{
+				const name = ImageProcessor.getIconFileName(iconFileName, size);
+				
+				linkTags.push(raw.link({
+					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
+					type: "image/png",
+					sizes: size + "x" + size,
+					href: SiteFolder.icon + name,
+				}));
+			}
+			
+			return linkTags;
 		}
+		private readonly icons = new Set<string>();
 		
 		/**
 		 * Creates a webfeed post at the specified location.
@@ -123,7 +142,7 @@ namespace Straw
 			const siteRoot = root.down(ProjectFolder.site);
 			const sourceRoot = root.down(ProjectFolder.source);
 			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
-			const imagePipeline = new ImagePipeline(sourceRoot, imagesSaveRoot);
+			const imagePipeline = new ImageRewriter(sourceRoot, imagesSaveRoot);
 			
 			// These elements should be written later			
 			const metaElements = new Map<string, HTMLElement[]>();
@@ -216,8 +235,21 @@ namespace Straw
 			
 			// Create the /static folder within the site if necessary
 			const sourceStaticFolder = root.down(ProjectFolder.static);
-			const destStaticFolder = siteRoot.down(ProjectFolder.static);
-			await destStaticFolder.writeSymlink(sourceStaticFolder);
+			if (await sourceStaticFolder.exists())
+			{
+				const destStaticFolder = siteRoot.down(ProjectFolder.static);
+				await destStaticFolder.writeSymlink(sourceStaticFolder);
+			}
+			
+			// Generate any icons
+			for (const iconFileName of this.icons)
+			{
+				const imageFila = await ImageProcessor.findImage(sourceRoot, iconFileName);
+				if (!imageFila)
+					throw new Error("Image not found: " + imageFila);
+				
+				await ImageProcessor.processIcon(imageFila, siteRoot);
+			}
 		}
 		
 		/** */

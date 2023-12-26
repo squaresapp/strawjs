@@ -1,12 +1,10 @@
 
 namespace Straw
 {
-	let photon: typeof import("@silvia-odwyer/photon-node");
-	
 	/**
 	 * @internal
 	 */
-	export class ImagePipeline
+	export class ImageRewriter
 	{
 		/** */
 		constructor(
@@ -36,11 +34,14 @@ namespace Straw
 					for (let i = parsedDatas.length; i-- > 0;)
 					{
 						const params = parsedDatas[i];
-						const imageFila = await findImage(this.imageSearchRoot, params.name);
+						const imageFila = await ImageProcessor.findImage(this.imageSearchRoot, params.name);
 						if (!imageFila)
 							throw new Error("No image found with name: " + params.name);
 						
-						const processedFilePath = await this.processImage(imageFila, params);
+						const processedFilePath = await ImageProcessor.processImage(
+							imageFila,
+							this.imageSaveRoot,
+							params);
 						
 						propertyValue = 
 							propertyValue.slice(0, params.start) +
@@ -53,93 +54,13 @@ namespace Straw
 				else if (x instanceof Attr)
 				{
 					const params = parseImageUrl(x.value)[0];
-					const imageFila = await findImage(this.imageSearchRoot, params.name);
+					const imageFila = await ImageProcessor.findImage(this.imageSearchRoot, params.name);
 					if (!imageFila)
 						throw new Error("No image found with name: " + params.name);
 					
-					x.value = await this.processImage(imageFila, params);
+					x.value = await ImageProcessor.processImage(imageFila, this.imageSearchRoot, params);
 				}
 			}
-		}
-		
-		/** */
-		private async processImage(imageFila: Fila, params: ImageParams)
-		{
-			const imageCrc = await computeFileCrc(imageFila);
-			const nameNoExt = imageFila.name.slice(0, -imageFila.extension.length);
-			const parts = [nameNoExt, imageCrc];
-			let finalFileName = "";
-			
-			if (imageFila.extension === ".svg")
-			{
-				finalFileName = parts.join(".") + imageFila.extension;
-				await imageFila.copy(this.imageSaveRoot.down(finalFileName));
-			}
-			else
-			{
-				if (params.width)
-					parts.push(params.width + "w");
-				
-				if (params.height)
-					parts.push(params.height + "h");
-				
-				if (params.gray)
-					parts.push("g");
-				
-				if (params.blur)
-					parts.push(params.blur + "b");
-				
-				finalFileName = parts.join(".") + imageFila.extension;
-				const finalFila = this.imageSaveRoot.down(finalFileName);
-				
-				if (!await finalFila.exists())
-				{
-					photon ||= require("@silvia-odwyer/photon-node");
-					
-					const bytes = new Uint8Array(await imageFila.readBinary());
-					let photonImage = photon.PhotonImage.new_from_byteslice(bytes);
-					const originalWidth = photonImage.get_width();
-					const originalHeight = photonImage.get_height();
-					const ratio = originalWidth / originalHeight;
-					
-					let width = 0;
-					let height = 0;
-					
-					if (params.width && !params.height)
-					{
-						width = params.width;
-						height = params.width / ratio;
-					}
-					else if (!params.width && params.height)
-					{
-						width = params.height * ratio;
-						height = params.height;
-					}
-					else if (params.width && params.height)
-					{
-						width = params.width;
-						height = params.height;
-					}
-					else
-					{
-						width = originalWidth;
-						height = originalHeight;
-					}
-					
-					if (width !== originalWidth || height !== originalHeight)
-						photonImage = photon.resize(photonImage, width, height, 5);
-					
-					if (params.gray)
-						photon.grayscale(photonImage);
-					
-					if (params.blur)
-						photon.gaussian_blur(photonImage, params.blur);
-					
-					await finalFila.writeBinary(photonImage.get_bytes());
-				}
-			}
-			
-			return SiteFolder.images + finalFileName;
 		}
 	}
 	
@@ -241,7 +162,7 @@ namespace Straw
 			const parts = url.split(imageParamsSplit);
 			name = parts[0];
 			
-			for (const ext of imageExtensions)
+			for (const ext of ImageProcessor.extensions)
 				if (name.endsWith(ext))
 					extension = ext;
 			
@@ -270,71 +191,5 @@ namespace Straw
 		return files;
 	}
 	
-	/** */
-	interface ImageParams
-	{
-		readonly name: string;
-		readonly extension: string;
-		readonly start: number;
-		readonly end: number;
-		readonly width: number;
-		readonly height: number;
-		readonly blur: number;
-		readonly gray: boolean;
-	}
-	
 	const imageParamsSplit = "?";
-	const imageExtensions = [".gif", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".bmp", ".svg"];
-	
-	/**
-	 * Finds image files in the specified search root and below,
-	 * with the specified extensionless name.
-	 */
-	async function findImage(searchRoot: Fila, nameMaybeExtensionless: string)
-	{
-		const queue = await searchRoot.readDirectory();
-		const hasExtension = imageExtensions.some(e => nameMaybeExtensionless.endsWith(e));
-		
-		// If "base" has a slash in it, then it's treated assumed to be an absolute path.
-		if (nameMaybeExtensionless.includes("/"))
-		{
-			if (hasExtension)
-			{
-				const fila = searchRoot.down(nameMaybeExtensionless);
-				if (await fila.exists())
-					return fila;
-			}
-			else for (const fila of imageExtensions.map(e => searchRoot.down(nameMaybeExtensionless)))
-				if (await fila.exists())
-					return fila;
-		}
-		
-		while (queue.length)
-		{
-			const fila = queue.shift();
-			if (!fila)
-				return null;
-			
-			if (await fila.isDirectory())
-				queue.push(...await fila.readDirectory());
-			
-			if (hasExtension)
-			{
-				if (fila.name === nameMaybeExtensionless)
-					return fila;
-			}
-			else if (imageExtensions.map(e => nameMaybeExtensionless + e).some(s => s === fila.name))
-				return fila;
-		}
-		return null;
-	}
-	
-	/** */
-	async function computeFileCrc(fila: Fila)
-	{
-		const crc = require("crc-32") as typeof import("crc-32");
-		const contents = new Uint8Array(await fila.readBinary());
-		const num = crc.buf(contents) + (2 ** 32 / 2);
-		return num.toString(36);
-	}
 }

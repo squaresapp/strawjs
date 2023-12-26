@@ -46,4 +46,13 @@ namespace Straw
 		source = "source/",
 		static = "static/",
 	}
+	
+	/**
+	 * An object that stores the various icon size variations to generate 
+	 * for individual targets.
+	 */
+	export const iconSizes = {
+		generic: [16, 32, 96, 192],
+		appleTouch: [57, 60, 72, 76, 114, 120, 144, 152, 180],
+	};
 }
