@@ -45,6 +45,8 @@ namespace Straw
 			
 			return linkTags;
 		}
+		
+		/** Stores a set of icon file names to process and save to the icons folder. */
 		private readonly icons = new Set<string>();
 		
 		/**
@@ -176,13 +178,7 @@ namespace Straw
 				];
 				
 				if (feedOptions.icon)
-				{
-					const type = 
-						feedOptions.icon.endsWith(".png") ? "image/png" :
-						feedOptions.icon.endsWith(".jpg") ? "image/jpeg" : "image/jpeg";
-					
-					elements.push(raw.link({ rel: "icon", type, href: feedOptions.icon }));
-				}
+					elements.push(...this.icon(feedOptions.icon));
 				
 				if (this._pages.has(feedFolder.path))
 				{
