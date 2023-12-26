@@ -25,8 +25,8 @@
 		]
 	},
 	"include": [
-		"node_modules/@scrollapp/rawjs/*.ts",
-		"node_modules/@scrollapp/fila-*/fila-*.ts",
+		"node_modules/@squaresapp/rawjs/*.ts",
+		"node_modules/@squaresapp/fila-*/fila-*.ts",
 		"core/**/*.ts",
 		"core/**/*.tsx",
 		"core/X.ts",
