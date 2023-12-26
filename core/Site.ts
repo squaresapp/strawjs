@@ -151,15 +151,19 @@ namespace Straw
 				// index.html file and we don't want to override it. So instead, we just
 				// write the meta elements to a map, and 
 				
-				const type = 
-					feedOptions.icon.endsWith(".png") ? "image/png" :
-					feedOptions.icon.endsWith(".jpg") ? "image/jpeg" : "image/jpeg";
-				
-				const elements = [
+				const elements: HTMLElement[] = [
 					raw.meta({ name: "author", content: feedOptions.author }),
 					raw.meta({ name: "description", content: feedOptions.description }),
-					raw.link({ rel: "icon", type, href: feedOptions.icon }),
 				];
+				
+				if (feedOptions.icon)
+				{
+					const type = 
+						feedOptions.icon.endsWith(".png") ? "image/png" :
+						feedOptions.icon.endsWith(".jpg") ? "image/jpeg" : "image/jpeg";
+					
+					elements.push(raw.link({ rel: "icon", type, href: feedOptions.icon }));
+				}
 				
 				if (this._pages.has(feedFolder.path))
 				{
@@ -265,6 +269,6 @@ namespace Straw
 		readonly description: string;
 		
 		/** */
-		readonly icon: string;
+		readonly icon?: string;
 	}
 }
