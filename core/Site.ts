@@ -34,13 +34,16 @@ namespace Straw
 			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
 			{
 				const name = ImageProcessor.getIconFileName(iconFileName, size);
-				
-				linkTags.push(raw.link({
+				const linkTag = raw.link({
 					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
 					type: "image/png",
-					sizes: size + "x" + size,
 					href: SiteFolder.icon + name,
-				}));
+				});
+				
+				// This attribute has to be assigned explicitly due to a deficiency of happy-dom.
+				// See issue: https://github.com/capricorn86/happy-dom/issues/1185
+				linkTag.setAttribute("sizes", size + "x" + size)
+				linkTags.push(linkTag);
 			}
 			
 			return linkTags;

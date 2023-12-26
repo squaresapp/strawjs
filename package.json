@@ -2,7 +2,7 @@
 	"name": "strawjs",
 	"author": "Paul Gordon",
 	"description": "A static site generator for those who can't get enough of RawJS",
-	"version": "1.0.28",
+	"version": "1.0.29",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
