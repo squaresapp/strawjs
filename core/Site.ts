@@ -167,7 +167,7 @@ namespace Straw
 			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
 			const imagePipeline = new ImageRewriter(sourceRoot, imagesSaveRoot);
 			
-			// These elements should be written later			
+			// These elements should be written later
 			const metaElements = new Map<string, HTMLElement[]>();
 			
 			for (const feedOptions of this._feeds.values())

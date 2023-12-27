@@ -31,9 +31,6 @@ namespace Straw
 			
 			if (options.doctype === undefined)
 				options.doctype = true;
-			
-			if (options.doctype)
-				this.em.line("<!DOCTYPE html>");
 		}
 		
 		private readonly em;
@@ -42,24 +39,21 @@ namespace Straw
 		/** */
 		emit()
 		{
-			if (this.options.nodes.length === 0)
-				return "";
+			if (this.options.doctype)
+				this.em.line("<!DOCTYPE html>");
 			
 			for (const n of this.options.nodes)
 			{
 				if (this.rawType.is.element(n))
-				{
 					this.emitElement(n);
-				}
+				
 				else if (this.rawType.is.comment(n))
-				{
 					this.emitComment(n);
-				}
+				
 				else if (this.rawType.is.node(n))
-				{
 					this.emitNode(n);
-				}
 			}
+			
 			return this.toString();
 		}
 		
