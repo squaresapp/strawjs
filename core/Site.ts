@@ -11,10 +11,15 @@ namespace Straw
 		{
 			const { Raw } = require("@squaresapp/rawjs");
 			
+			// Setup the default CSS property list in RawJS.
+			for (const name of Straw.cssProperties)
+				if (!Raw.properties.has(name))
+					Raw.properties.add(name);
+			
 			//@ts-ignore
 			this.window = new Window({ url: "https://localhost:8080", width: 1024, height: 768 });
 			this.document = this.window.document;
-			this.raw = new Raw(this.document);
+			(global as any).raw = this.raw = new Raw(this.document);
 		}
 		
 		readonly raw: Raw;
