@@ -10,11 +10,12 @@ namespace Straw
 		constructor()
 		{
 			const { Raw } = require("@squaresapp/rawjs");
+			this.rawType = Raw;
 			
 			// Setup the default CSS property list in RawJS.
 			for (const name of Straw.cssProperties)
-				if (!Raw.properties.has(name))
-					Raw.properties.add(name);
+				if (!this.rawType.properties.has(name))
+					this.rawType.properties.add(name);
 			
 			//@ts-ignore
 			this.window = new Window({ url: "https://localhost:8080", width: 1024, height: 768 });
@@ -23,6 +24,7 @@ namespace Straw
 		}
 		
 		readonly raw: Raw;
+		private readonly rawType: typeof Raw;
 		readonly document: Document;
 		readonly window: Window;
 		
@@ -99,7 +101,7 @@ namespace Straw
 			let page = this._pages.get(path);
 			if (!page)
 			{
-				const doc = window.document;
+				const doc = this.window.document;
 				const documentElement = doc.createElement("html")
 				const head = doc.createElement("head");
 				const body = doc.createElement("body");
@@ -205,7 +207,10 @@ namespace Straw
 				}
 				else
 				{
-					const htmlContent = executeEmit({ doctype: true }, ...elements);
+					const htmlContent = new HtmlElementEmitter({
+						rawType: this.rawType,
+						nodes: elements }).emit();
+					
 					const indexHtmlFila = feedFolder.down("index.html");
 					await indexHtmlFila.writeText(htmlContent);
 				}
@@ -214,7 +219,9 @@ namespace Straw
 			for (const post of this._posts.values())
 			{
 				await imagePipeline.adjust(...post.sections);
-				const htmlContent = executeEmit({ doctype: true }, ...post.sections);
+				const htmlContent = new HtmlElementEmitter(
+					{ rawType: this.rawType,
+					nodes: post.sections }).emit();
 				
 				let fila = siteRoot.down(post.path);
 				if (!fila.name.endsWith(".html"))
@@ -239,7 +246,9 @@ namespace Straw
 					// tags defined with the same names.
 				}
 				
-				const htmlContent = executeEmit({ doctype: true }, page.documentElement);
+				const htmlContent = new HtmlElementEmitter(
+					{ rawType: this.rawType,
+					nodes: [page.documentElement] }).emit();
 				
 				let fila = siteRoot.down(path);
 				if (!fila.name.endsWith(".html"))

@@ -2,7 +2,7 @@
 namespace Cover
 {
 	/** */
-	export async function coverBasic()
+	export async function coverWebfeed()
 	{
 		const straw = new Straw.Site();
 		const raw = straw.raw;
@@ -16,12 +16,12 @@ namespace Cover
 			
 			raw.div(
 				"class-1 class-2",
-				raw.img("img-cls", { src: "img.example?width=300" }),
-				raw.img("img-cls", { src: "img.twitter" }),
+				raw.img("img-cls", { src: "sample-photo?width=300" }),
+				raw.img("img-cls", { src: "sample-photo" }),
 				raw.div(
 					"div-img",
 					{
-						backgroundImage: `url(img.button-apple-store)`
+						backgroundImage: `url(sample-background)`
 					}
 				),
 				raw.a("anchor", { href: "/privacy" }),
@@ -48,10 +48,10 @@ namespace Cover
 			author: "Paul Gordon",
 			description: "Description",
 			root: "/webfeed/",
-			icon: "icon",
+			icon: "sample-icon.png",
 		});
 		
-		setTimeout(() => straw.emit("cover/+sample"));
+		setTimeout(() => straw.emit("cover/webfeed-cover"));
 	}
 }
 

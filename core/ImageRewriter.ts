@@ -76,11 +76,12 @@ namespace Straw
 		
 		for (const container of containers)
 		{
-			const walker = document.createTreeWalker(container);
+			const doc = container.ownerDocument;
+			const walker = doc.createTreeWalker(container);
 			while (walker.nextNode())
 			{
-				const e = walker.currentNode;
-				if (!Raw.is.element(e))
+				const e = walker.currentNode as HTMLElement;
+				if (e.nodeType !== 1) // is element
 					continue;
 				
 				const tag = e.tagName;

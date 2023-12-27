@@ -4,6 +4,9 @@ namespace Straw
 	/** */
 	export interface IEmitOptions
 	{
+		/** */
+		rawType: typeof Raw;
+		
 		/** Specifies whether the <!DOCTYPE> declaration should be included. */
 		doctype?: boolean;
 		
@@ -12,67 +15,56 @@ namespace Straw
 		
 		/** Specifies whether the output should be formatted as valid XML. */
 		xml?: boolean;
-	}
-	
-	/** @internal */
-	export function executeEmit(options: IEmitOptions, ...nodes: Node[]): string;
-	/** @internal */
-	export function executeEmit(...nodes: Node[]): string;
-	/** @internal */
-	export function executeEmit(...args: any[])
-	{
-		if (args.length === 0)
-			return "";
 		
-		let options: IEmitOptions = {};
-		
-		const a0 = args[0];
-		if (a0 && !Raw.is.node(a0) && !Array.isArray(a0) && a0.constructor === Object)
-		{
-			const o = a0 as IEmitOptions;
-			options.doctype = !!o.doctype;
-			options.minify = !!o.minify;
-			options.xml = !!o.xml;
-			args.shift();
-		}
-		
-		const nodes: Node[] = args.flat();
-		const emitter = new HtmlElementEmitter(options);
-		
-		for (const n of nodes)
-		{
-			if (Raw.is.element(n))
-			{
-				emitter.emitElement(n);
-			}
-			else if (Raw.is.comment(n))
-			{
-				emitter.emitComment(n);
-			}
-			else if (Raw.is.node(n))
-			{
-				emitter.emitNode(n);
-			}
-		}
-		return emitter.toString();
+		/** */
+		nodes: Node[];
 	}
 	
 	/** */
-	class HtmlElementEmitter
+	export class HtmlElementEmitter
 	{
 		/** */
 		constructor(readonly options: IEmitOptions)
 		{
 			this.em = new HtmlEmitter(options);
+			this.rawType = options.rawType;
+			
+			if (options.doctype === undefined)
+				options.doctype = true;
 			
 			if (options.doctype)
 				this.em.line("<!DOCTYPE html>");
 		}
 		
-		private readonly em: HtmlEmitter;
+		private readonly em;
+		private readonly rawType;
 		
 		/** */
-		emitElement(e: HTMLElement)
+		emit()
+		{
+			if (this.options.nodes.length === 0)
+				return "";
+			
+			for (const n of this.options.nodes)
+			{
+				if (this.rawType.is.element(n))
+				{
+					this.emitElement(n);
+				}
+				else if (this.rawType.is.comment(n))
+				{
+					this.emitComment(n);
+				}
+				else if (this.rawType.is.node(n))
+				{
+					this.emitNode(n);
+				}
+			}
+			return this.toString();
+		}
+		
+		/** */
+		private emitElement(e: HTMLElement)
 		{
 			const attributes = this.getAttributes(e);
 			const name = e.nodeName.toLowerCase();
@@ -128,7 +120,7 @@ namespace Straw
 				
 				for (const child of Array.from(e.childNodes))
 				{
-					if (Raw.is.text(child) && child.nodeValue)
+					if (this.rawType.is.text(child) && child.nodeValue)
 					{
 						const linesOfText = child.nodeValue
 							.split(/\n/g)
@@ -137,7 +129,7 @@ namespace Straw
 						for (const lineOfText of linesOfText)
 							this.em.line(lineOfText);
 					}
-					else if (Raw.is.element(child))
+					else if (this.rawType.is.element(child))
 					{
 						this.emitElement(child);
 					}
@@ -159,11 +151,11 @@ namespace Straw
 			{
 				for (const child of Array.from(nodes))
 				{
-					if (Raw.is.text(child) && child.nodeValue)
+					if (this.rawType.is.text(child) && child.nodeValue)
 					{
 						em.inline(child.nodeValue);
 					}
-					else if (Raw.is.element(child))
+					else if (this.rawType.is.element(child))
 					{
 						const attributes = this.getAttributes(child);
 						const name = child.nodeName.toLowerCase();
@@ -191,7 +183,7 @@ namespace Straw
 				return false;
 			
 			return nodes
-				.map(n => Raw.is.text(n) || (Raw.is.element(n) && isInline(n.nodeName)))
+				.map(n => this.rawType.is.text(n) || (this.rawType.is.element(n) && isInline(n.nodeName)))
 				.every(bool => bool);
 		}
 		
@@ -217,19 +209,19 @@ namespace Straw
 		}
 		
 		/** */
-		emitComment(node: Raw.INodeLike)
+		private emitComment(node: Raw.INodeLike)
 		{
 			this.em.line("<!--" + (node.nodeValue || "") + "-->");
 		}
 		
 		/** */
-		emitNode(node: Raw.INodeLike)
+		private emitNode(node: Raw.INodeLike)
 		{
 			this.em.inline(node.nodeValue || "");
 		}
 		
 		/** */
-		toString()
+		private toString()
 		{
 			return this.em.toString();
 		}
