@@ -108,7 +108,7 @@ namespace Straw
 		const topFileLines = [
 			`const Straw = require("strawjs") as typeof import("strawjs");`,
 			`const straw = new Straw.Site();`,
-			`const raw = straw.raw;`,
+			`raw = straw.raw;`,
 			`const t = raw.text.bind(raw);`
 		];
 		
