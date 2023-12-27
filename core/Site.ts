@@ -9,6 +9,8 @@ namespace Straw
 		/** */
 		constructor()
 		{
+			const { Raw } = require("@squaresapp/rawjs");
+			
 			//@ts-ignore
 			this.window = new Window({ url: "https://localhost:8080", width: 1024, height: 768 });
 			this.document = this.window.document;

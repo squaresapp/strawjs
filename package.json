@@ -2,7 +2,7 @@
 	"name": "strawjs",
 	"author": "Paul Gordon",
 	"description": "A static site generator for those who can't get enough of RawJS",
-	"version": "1.0.32",
+	"version": "1.0.33",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -27,12 +27,13 @@
 	],
 	"scripts": {
 		"test": "exit 0",
-		"bundle": "tsc -p tsconfig.release.json && terser ./+build/straw.js > ./+build/straw.min.js",
+		"export": "sed -i '' 's/\\/\\*\\* export \\*\\//export = Straw;/' ./+build/straw.d.ts",
+		"bundle": "tsc -p tsconfig.release.json && terser ./+build/straw.js > ./+build/straw.min.js && npm run export",
 		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
 	},
 	"dependencies": {
 		"@silvia-odwyer/photon-node": "^0.3.3",
-		"@squaresapp/rawjs": "^1.3.8",
+		"@squaresapp/rawjs": "^1.3.9",
 		"crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
 		"fila-node": "^1.0.5",
 		"happy-dom": "^12.10.3"

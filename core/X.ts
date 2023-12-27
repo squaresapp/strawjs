@@ -10,3 +10,4 @@ namespace Straw
 }
 
 module.exports = Straw;
+/** export */
