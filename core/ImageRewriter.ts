@@ -58,7 +58,7 @@ namespace Straw
 					if (!imageFila)
 						throw new Error("No image found with name: " + params.name);
 					
-					x.value = await ImageProcessor.processImage(imageFila, this.imageSearchRoot, params);
+					x.value = await ImageProcessor.processImage(imageFila, this.imageSaveRoot, params);
 				}
 			}
 		}
