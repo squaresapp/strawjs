@@ -27,8 +27,7 @@
 	],
 	"scripts": {
 		"test": "exit 0",
-		"export": "sed -i '' 's/\\/\\*\\* export \\*\\//export = Straw;/' ./+build/straw.d.ts",
-		"bundle": "tsc -p tsconfig.release.json && terser ./+build/straw.js > ./+build/straw.min.js && npm run export",
+		"bundle": "tsc -p tsconfig.release.json",
 		"release": "npm run bundle && cd ./+build && cp ../package.json ./package.json && np && cp ./package.json ../package.json"
 	},
 	"dependencies": {
