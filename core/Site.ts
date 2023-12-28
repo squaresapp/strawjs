@@ -267,7 +267,13 @@ namespace Straw
 			if (await sourceStaticFolder.exists())
 			{
 				const destStaticFolder = siteRoot.down(ProjectFolder.static);
-				await destStaticFolder.writeSymlink(sourceStaticFolder);
+				
+				// The Cloudflare build-bot doesn't support symlinks, so the files
+				// need to be copied instead of symlinked. This doesn't matter during
+				// build because everything is discarded after a successful build.
+				inCloudflareBuildBot ?
+					await sourceStaticFolder.move(destStaticFolder) :
+					await destStaticFolder.writeSymlink(sourceStaticFolder);
 			}
 			
 			//# Generate any icons
@@ -292,11 +298,11 @@ namespace Straw
 		}
 	}
 	
-	/** */
-	function toArray<T>(item: T | T[]): T[]
-	{
-		return Array.isArray(item) ? item : [item];
-	}
+	const inCloudflareBuildBot =
+		typeof process === "object" &&
+		typeof process.env === "object" &&
+		process.env.CI === "true" &&
+		!!process.env.CF_PAGES;
 	
 	/** */
 	export interface Page
