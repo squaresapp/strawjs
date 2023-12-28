@@ -94,8 +94,11 @@ namespace Straw
 					const sheet = (e as HTMLStyleElement).sheet;
 					if (sheet)
 					{
-						const rule = sheet.cssRules[0] as CSSStyleRule;
-						result.push(...discoverProperties(rule.style));
+						for (let i = -1; ++i < sheet.cssRules.length;)
+						{
+							const rule = sheet.cssRules[i] as CSSStyleRule;
+							result.push(...discoverProperties(rule.style));
+						}
 					}
 				}
 				else

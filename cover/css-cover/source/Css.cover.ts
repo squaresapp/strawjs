@@ -9,6 +9,9 @@ namespace Cover
 		straw.page("/",
 			raw.div(
 				raw.css(
+					"&", {
+						width: 0,
+					},
 					">IMG", {
 						border: "10px solid red",
 						backgroundImage: `url(sample-photo)`
