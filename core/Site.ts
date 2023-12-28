@@ -2,24 +2,12 @@
 namespace Straw
 {
 	export type PageParam = Element | Element[] | string | string[];
-	export type PageRenderFn = () => PageParam[];
 	
 	/** */
 	export class Site
 	{
 		/** */
-		constructor()
-		{
-			const { Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs")
-			this.rawType = Raw;
-			
-			// Setup the default CSS property list in RawJS.
-			for (const name of Straw.cssProperties)
-				if (!this.rawType.properties.has(name))
-					this.rawType.properties.add(name);
-		}
-		
-		private readonly rawType: typeof Raw;
+		constructor() { }
 		
 		/**
 		 * Initializes a straw website with the necessary packages installed
@@ -44,33 +32,25 @@ namespace Straw
 		/**
 		 * Creates a standard HTML page at the specified location.
 		 */
-		page(relativePath: string, renderFn: PageRenderFn): Page;
-		page(relativePath: string, date: Date, renderFn: PageRenderFn): Page;
-		page(relativePath: string, a: any, renderFn?: PageRenderFn)
+		page(relativePath: string, ...params: PageParam[]): Page;
+		page(relativePath: string, date: Date, ...params: PageParam[]): Page;
+		page(relativePath: string, a: any, ...params: PageParam[])
 		{
-			const fn: PageRenderFn = typeof a === "function" ? a : renderFn;
-			const date = a instanceof Date ? a : undefined;
+			let date: Date | undefined;
+			
+			if (!(a instanceof Date))
+				params.unshift(a);
+			else
+				date = a;
 			
 			let page = this._pages.get(relativePath);
 			if (!page)
 			{
-				const windowArgs = { url: "https://localhost:8080", width: 1024, height: 1024 };
-				//@ts-ignore
-				const window = new Window(windowArgs);
-				const doc = window.document;
-				const documentElement = doc.createElement("html")
-				const head = doc.createElement("head");
-				const body = doc.createElement("body");
-				documentElement.append(head, body);
-				
-				page = {
-					document: doc,
+				this._pages.set(relativePath, page = {
 					path: relativePath,
-					renderFn: fn,
-					date
-				};
-				
-				this._pages.set(relativePath, page);
+					date,
+					params
+				});
 			}
 			
 			return page;
@@ -93,8 +73,6 @@ namespace Straw
 		 */
 		icon(iconFileName: string)
 		{
-			this.ensureRenderingPage();
-			
 			this.icons.add(iconFileName);
 			const linkTags: HTMLLinkElement[] = [];
 			
@@ -108,7 +86,7 @@ namespace Straw
 				
 				// This attribute has to be assigned explicitly due to a deficiency of happy-dom.
 				// See issue: https://github.com/capricorn86/happy-dom/issues/1185
-				linkTag.setAttribute("sizes", size + "x" + size)
+				linkTag.setAttribute("sizes", size + "x" + size);
 				linkTags.push(linkTag);
 			}
 			
@@ -128,8 +106,6 @@ namespace Straw
 		script(src: string): HTMLScriptElement;
 		script(arg: (() => void) | string)
 		{
-			this.ensureRenderingPage();
-			
 			if (typeof arg === "string")
 			{
 				if (["http:", "https:", "file:"].some(s => arg.startsWith(s)))
@@ -156,6 +132,8 @@ namespace Straw
 			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
 			const imageRewriter = new ImageRewriter(sourceRoot, imagesSaveRoot);
 			const pagesToMaybeAugment: string[] = [];
+			const style = document.head.querySelector("STYLE.raw-style-sheet") as HTMLStyleElement;
+			const rules = style.sheet!.cssRules;
 			
 			for (const feedOptions of this._feeds.values())
 			{
@@ -177,37 +155,24 @@ namespace Straw
 				// index.txt file, which has the feed meta data, in the case when there is no
 				// other index.html file exists at the location.
 				if (!this._pages.has(feedRelativeRoot))
-					this.page(feedRelativeRoot, () => this.createFeedMetaElements(feedOptions));
+					this.page(feedRelativeRoot, this.createFeedMetaElements(feedOptions));
 				else
 					pagesToMaybeAugment.push(feedRelativeRoot);
 			}
 			
 			for (const page of this._pages.values())
 			{
-				//# Render the page
-				const g = globalThis as any;
-				g.raw = new this.rawType(page.document);
-				g.t = raw.text.bind(raw);
-				
-				try
-				{
-					this.renderingPage = page;
-					const result = page.renderFn().flat();
-					page.document.body.append(...result);
-				}
-				finally
-				{
-					this.renderingPage = null;
-				}
+				const params = page.params.flat().map(p => typeof p === "string" ? raw.text(p) : p);
+				const head = raw.head();
+				const body = raw.body(params);
 				
 				//# Hoist the meta elements
-				const head = page.document.querySelector("head") as HTMLHeadElement;
-				const metaQuery = page.document.body.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
+				const metaQuery = body.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
 				for (let i = -1;  ++i < metaQuery.length;)
 					head.append(metaQuery[i]);
 				
 				//# Fix the image URLs
-				await imageRewriter.adjust(page.document.body);
+				await imageRewriter.adjust(body);
 				
 				//# Inject any missing meta elements caused by any feed definitions.
 				const feedOptions = this._feeds.get(page.path);
@@ -222,11 +187,41 @@ namespace Straw
 					if (feedOptions.icon && !head.querySelector(`LINK[rel="icon"]`))
 						head.append(...this.icon(feedOptions.icon));
 				}
-						
-				const htmlContent = new HtmlElementEmitter({
-					rawType: this.rawType,
-					nodes: [page.document.documentElement]
-				}).emit();
+				
+				//# Relocate any relevant CSS rules that landed in the global style sheet.
+				const classNamesInUse = new Set<string>();
+				for (const e of Util.walkElementTree(body))
+				{
+					e.classList.forEach(cls =>
+					{
+						if (/^raw-[a-z0-9]{10,}$/.test(cls))
+							classNamesInUse.add(cls);
+					});
+				}
+				
+				const rulesExtracted: string[] = [];
+				for (let i = -1; ++i < rules.length;)
+				{
+					const rule = rules[i];
+					
+					if (/^\.raw-[a-z0-9]{10,}/.test(rule.cssText))
+					{
+						const clsEnd = rule.cssText.slice(10).search(/[^a-z0-9]/) + 10;
+						const cls = rule.cssText.slice(1, clsEnd);
+						if (classNamesInUse.has(cls))
+							rulesExtracted.push(rule.cssText);
+					}
+				}
+				
+				if (rulesExtracted.length > 0)
+				{
+					const style = raw.style();
+					style.textContent = rulesExtracted.join("\n");
+					head.append(style);
+				}
+				
+				const nodes = Array.from(head.children).concat(Array.from(body.children));
+				const htmlContent = new HtmlElementEmitter({ nodes }).emit();
 				
 				let fila = siteRoot.down(page.path);
 				if (!fila.name.endsWith(".html"))
@@ -263,15 +258,6 @@ namespace Straw
 				...(feedOptions.icon ? this.icon(feedOptions.icon) : [])
 			];
 		}
-		
-		/** */
-		private ensureRenderingPage()
-		{
-			if (this.renderingPage === null)
-				throw new Error("Cannot call this function at this time, because there is no page being rendered.");
-		}
-		
-		private renderingPage: Page | null = null;
 	}
 	
 	/** */
@@ -295,8 +281,12 @@ namespace Straw
 		 * included within a webfeed definition.
 		 */
 		readonly date?: Date;
-		readonly document: Document;
-		readonly renderFn: PageRenderFn;
+		
+		/**
+		 * Specifies the Nodes to include in the page, which get
+		 * organized into body and head elements during emit.
+		 */
+		readonly params: PageParam[];
 	}
 	
 	/** */

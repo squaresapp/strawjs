@@ -27,5 +27,17 @@ namespace Straw
 			const num = crc.buf(contents) + (2 ** 32 / 2);
 			return num.toString(36);
 		}
+		
+		/**
+		 * Enumerates through the decendents of the specified container element.
+		 */
+		export function * walkElementTree(container: HTMLElement)
+		{
+			const doc = container.ownerDocument;
+			const walker = doc.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+			while (walker.nextNode())
+				if (walker.currentNode instanceof HTMLElement)
+					yield walker.currentNode;
+		}
 	}
 }

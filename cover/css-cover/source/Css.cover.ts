@@ -6,16 +6,17 @@ namespace Cover
 	{
 		const straw = new Straw.Site();
 		
-		straw.page("/", () => [
-			raw.div(
-				raw.css(
-					">IMG", {
-						border: "10px solid red"
-					}
-				),
-				raw.img("img-cls", { src: "sample-photo" }),
-			)
-		]);
+		const css = raw.css(
+			">IMG", {
+				border: "10px solid red"
+			}
+		);
+		
+		const div = raw.div(css);
+		
+		straw.page("/",
+			div
+		);
 		
 		await straw.emit("cover/css-cover");
 	}

@@ -4,9 +4,6 @@ namespace Straw
 	/** */
 	export interface IEmitOptions
 	{
-		/** */
-		rawType: typeof Raw;
-		
 		/** Specifies whether the <!DOCTYPE> declaration should be included. */
 		doctype?: boolean;
 		
@@ -27,14 +24,12 @@ namespace Straw
 		constructor(readonly options: IEmitOptions)
 		{
 			this.em = new HtmlEmitter(options);
-			this.rawType = options.rawType;
 			
 			if (options.doctype === undefined)
 				options.doctype = true;
 		}
 		
 		private readonly em;
-		private readonly rawType;
 		
 		/** */
 		emit()
@@ -44,13 +39,13 @@ namespace Straw
 			
 			for (const n of this.options.nodes)
 			{
-				if (this.rawType.is.element(n))
+				if (Raw.is.element(n))
 					this.emitElement(n);
 				
-				else if (this.rawType.is.comment(n))
+				else if (Raw.is.comment(n))
 					this.emitComment(n);
 				
-				else if (this.rawType.is.node(n))
+				else if (Raw.is.node(n))
 					this.emitNode(n);
 			}
 			
@@ -117,7 +112,7 @@ namespace Straw
 				
 				for (const child of Array.from(e.childNodes))
 				{
-					if (this.rawType.is.text(child) && child.nodeValue)
+					if (Raw.is.text(child) && child.nodeValue)
 					{
 						const linesOfText = child.nodeValue
 							.split(/\n/g)
@@ -126,7 +121,7 @@ namespace Straw
 						for (const lineOfText of linesOfText)
 							this.em.line(lineOfText);
 					}
-					else if (this.rawType.is.element(child))
+					else if (Raw.is.element(child))
 					{
 						this.emitElement(child);
 					}
@@ -148,11 +143,11 @@ namespace Straw
 			{
 				for (const child of Array.from(nodes))
 				{
-					if (this.rawType.is.text(child) && child.nodeValue)
+					if (Raw.is.text(child) && child.nodeValue)
 					{
 						em.inline(child.nodeValue);
 					}
-					else if (this.rawType.is.element(child))
+					else if (Raw.is.element(child))
 					{
 						const attributes = this.getAttributes(child);
 						const name = child.nodeName.toLowerCase();
@@ -180,7 +175,7 @@ namespace Straw
 				return false;
 			
 			return nodes
-				.map(n => this.rawType.is.text(n) || (this.rawType.is.element(n) && isInline(n.nodeName)))
+				.map(n => Raw.is.text(n) || (Raw.is.element(n) && isInline(n.nodeName)))
 				.every(bool => bool);
 		}
 		

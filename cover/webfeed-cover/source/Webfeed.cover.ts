@@ -6,7 +6,7 @@ namespace Cover
 	{
 		const straw = new Straw.Site();
 		
-		straw.page("/", () => [
+		straw.page("/",
 			straw.script(() =>
 			{
 				
@@ -25,23 +25,23 @@ namespace Cover
 				),
 				raw.a("anchor", { href: "/privacy" }),
 			)
-		]);
+		);
 		
-		straw.page("/privacy", () => [
+		straw.page("/privacy",
 			raw.h1(raw.text("Privacy Policy"))
-		]);
+		);
 		
-		straw.page("/webfeed/post1", new Date(2023, 0, 1), () => [
+		straw.page("/webfeed/post1", new Date(2023, 0, 1),
 			raw.section(),
 			raw.section(),
 			raw.section(),
-		]);
+		);
 		
-		straw.page("/webfeed/post2", new Date(2023, 0, 1), () => [
+		straw.page("/webfeed/post2", new Date(2023, 0, 1),
 			raw.section(),
 			raw.section(),
 			raw.section(),
-		]);
+		);
 		
 		straw.feed({
 			author: "Paul Gordon",
