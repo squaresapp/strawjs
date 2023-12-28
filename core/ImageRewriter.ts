@@ -49,7 +49,7 @@ namespace Straw
 							propertyValue.slice(params.end);
 					}
 					
-					x.element.style.setProperty(x.property, propertyValue);
+					x.style.setProperty(x.property, propertyValue);
 				}
 				else if (x instanceof Attr)
 				{
@@ -71,7 +71,6 @@ namespace Straw
 	function scanForImages(within: HTMLElement | HTMLElement[])
 	{
 		const containers = Array.isArray(within) ? within : [within];
-		const reg = /^https?:\/\//;
 		const result: (Attr | DiscoveredProperty)[] = [];
 		
 		for (const container of containers)
@@ -81,25 +80,32 @@ namespace Straw
 				const tag = e.tagName;
 				const attributes = [
 					e.getAttributeNode("src"),
-					tag === "embed" && e.getAttributeNode("source"),
-					tag === "video" && e.getAttributeNode("poster"),
-					tag === "object" && e.getAttributeNode("data"),
-					tag === "form" && e.getAttributeNode("action"),
-					tag === "link" && 
+					tag === "EMBED" && e.getAttributeNode("source"),
+					tag === "VIDEO" && e.getAttributeNode("poster"),
+					tag === "OBJECT" && e.getAttributeNode("data"),
+					tag === "FORM" && e.getAttributeNode("action"),
+					tag === "LINK" && 
 						(e.getAttribute("rel") ===  "icon" || e.getAttribute("rel") === "shortcut icon") && 
 						e.getAttributeNode("href"),
 				];
 				
-				for (const attr of attributes)
-					if (attr && attr.value)
-						if (!reg.test(attr.value))
-							result.push(attr);
-				
-				for (const property of Straw.cssPropertiesWithUrls)
+				if (tag === "STYLE")
 				{
-					const val = e.style.getPropertyValue(property);
-					if (val && !reg.test(val) && val.includes("url("))
-						result.push(new DiscoveredProperty(e, property, val));
+					const sheet = (e as HTMLStyleElement).sheet;
+					if (sheet)
+					{
+						const rule = sheet.cssRules[0] as CSSStyleRule;
+						result.push(...discoverProperties(rule.style));
+					}
+				}
+				else
+				{
+					for (const attr of attributes)
+						if (attr && attr.value)
+							if (!reg.test(attr.value))
+								result.push(attr);
+					
+					result.push(...discoverProperties(e.style));
 				}
 			}
 		}
@@ -108,10 +114,26 @@ namespace Straw
 	}
 	
 	/** */
+	function discoverProperties(style: CSSStyleDeclaration)
+	{
+		const discovered: DiscoveredProperty[] = [];
+		
+		for (const property of Straw.cssPropertiesWithUrls)
+		{
+			const val = style.getPropertyValue(property);
+			if (val && !reg.test(val) && val.includes("url("))
+				discovered.push(new DiscoveredProperty(style, property, val));
+		}
+		
+		return discovered;
+	}
+	const reg = /^https?:\/\//;
+	
+	/** */
 	class DiscoveredProperty
 	{
 		constructor(
-			readonly element: HTMLElement,
+			readonly style: CSSStyleDeclaration,
 			readonly property: string,
 			readonly value: string
 		) { }

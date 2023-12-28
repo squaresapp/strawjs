@@ -33,6 +33,7 @@ namespace Straw
 		 */
 		export function * walkElementTree(container: HTMLElement)
 		{
+			yield container;
 			const doc = container.ownerDocument;
 			const walker = doc.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
 			while (walker.nextNode())

@@ -220,8 +220,31 @@ namespace Straw
 					
 					if (rulesExtracted.length > 0)
 					{
+						// This code is a bit weird. We have to rewrite the image paths
+						// that are stored within CSS rules that are stored within <style>
+						// elements. However, the .sheet property of a style tag is only
+						// available when the containing <style> tag is present within
+						// some DOM, and the DOM in our case is shared between all
+						// pages, and we have to avoid inserting elements into it. So we
+						// have to set the .textContent of the style tag, rewrite the paths,
+						// then re-update the .textContent property again after the rewrite,
+						// and then remove the <style> element from the global DOM.
+						// This way, when the <style> tag is emitted, the emitter will see
+						// the updated textContent defined within the <style> element,
+						// and won't need to traverse into it's cssRules (which won't be
+						// available when the <style> tag is removed from the DOM.
+						
 						const style = raw.style();
+						document.head.append(style);
 						style.textContent = rulesExtracted.join("\n");
+						await imageRewriter.adjust(style);
+						
+						const cssTexts: string[] = [];
+						for (const rule of Array.from(style.sheet!.cssRules))
+							cssTexts.push(rule.cssText);
+						
+						style.textContent = cssTexts.join("\n");
+						style.remove();
 						head.append(style);
 					}
 				}
