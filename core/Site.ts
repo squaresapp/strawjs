@@ -2,8 +2,7 @@
 namespace Straw
 {
 	export type PageParam = Element | Element[] | string | string[];
-	export type PageRenderFn = () => PageParam | PageParam[];
-	export type PostRenderFn = () => HTMLElement | HTMLElement[];
+	export type PageRenderFn = () => PageParam[];
 	
 	/** */
 	export class Site
@@ -193,7 +192,7 @@ namespace Straw
 				try
 				{
 					this.renderingPage = page;
-					const result = toArray(page.renderFn()).flat();
+					const result = page.renderFn().flat();
 					page.document.body.append(...result);
 				}
 				finally

@@ -6,7 +6,7 @@ namespace Cover
 	{
 		const straw = new Straw.Site();
 		
-		straw.page("/", () =>
+		straw.page("/", () => [
 			raw.div(
 				raw.css(
 					">IMG", {
@@ -15,7 +15,7 @@ namespace Cover
 				),
 				raw.img("img-cls", { src: "sample-photo" }),
 			)
-		);
+		]);
 		
 		await straw.emit("cover/css-cover");
 	}

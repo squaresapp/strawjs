@@ -27,9 +27,9 @@ namespace Cover
 			)
 		]);
 		
-		straw.page("/privacy", () =>
+		straw.page("/privacy", () => [
 			raw.h1(raw.text("Privacy Policy"))
-		);
+		]);
 		
 		straw.page("/webfeed/post1", new Date(2023, 0, 1), () => [
 			raw.section(),
