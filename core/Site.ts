@@ -132,8 +132,8 @@ namespace Straw
 			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
 			const imageRewriter = new ImageRewriter(sourceRoot, imagesSaveRoot);
 			const pagesToMaybeAugment: string[] = [];
-			const style = document.head.querySelector("STYLE.raw-style-sheet") as HTMLStyleElement;
-			const rules = style.sheet!.cssRules;
+			const style = document.head.querySelector<HTMLStyleElement>("STYLE.raw-style-sheet");
+			const rawCssRules = Array.from(style?.sheet?.cssRules || []);
 			
 			for (const feedOptions of this._feeds.values())
 			{
@@ -189,35 +189,38 @@ namespace Straw
 				}
 				
 				//# Relocate any relevant CSS rules that landed in the global style sheet.
-				const classNamesInUse = new Set<string>();
-				for (const e of Util.walkElementTree(body))
+				if (rawCssRules.length > 0)
 				{
-					e.classList.forEach(cls =>
+					const classNamesInUse = new Set<string>();
+					for (const e of Util.walkElementTree(body))
 					{
-						if (/^raw-[a-z0-9]{10,}$/.test(cls))
-							classNamesInUse.add(cls);
-					});
-				}
-				
-				const rulesExtracted: string[] = [];
-				for (let i = -1; ++i < rules.length;)
-				{
-					const rule = rules[i];
-					
-					if (/^\.raw-[a-z0-9]{10,}/.test(rule.cssText))
-					{
-						const clsEnd = rule.cssText.slice(10).search(/[^a-z0-9]/) + 10;
-						const cls = rule.cssText.slice(1, clsEnd);
-						if (classNamesInUse.has(cls))
-							rulesExtracted.push(rule.cssText);
+						e.classList.forEach(cls =>
+						{
+							if (/^raw-[a-z0-9]{10,}$/.test(cls))
+								classNamesInUse.add(cls);
+						});
 					}
-				}
-				
-				if (rulesExtracted.length > 0)
-				{
-					const style = raw.style();
-					style.textContent = rulesExtracted.join("\n");
-					head.append(style);
+					
+					const rulesExtracted: string[] = [];
+					for (let i = -1; ++i < rawCssRules.length;)
+					{
+						const rule = rawCssRules[i];
+						
+						if (/^\.raw-[a-z0-9]{10,}/.test(rule.cssText))
+						{
+							const clsEnd = rule.cssText.slice(10).search(/[^a-z0-9]/) + 10;
+							const cls = rule.cssText.slice(1, clsEnd);
+							if (classNamesInUse.has(cls))
+								rulesExtracted.push(rule.cssText);
+						}
+					}
+					
+					if (rulesExtracted.length > 0)
+					{
+						const style = raw.style();
+						style.textContent = rulesExtracted.join("\n");
+						head.append(style);
+					}
 				}
 				
 				const nodes = Array.from(head.children).concat(Array.from(body.children));
