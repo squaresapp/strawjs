@@ -63,6 +63,9 @@ namespace Straw
 			const attributes = this.getAttributes(e);
 			const name = e.nodeName.toLowerCase();
 			
+			if (name === "head" || name === "body" && e.childNodes.length === 0)
+				return;
+			
 			if (isIsland(name) || e.childNodes.length === 0)
 			{
 				this.em.tag(name, attributes, e.nodeValue || "");

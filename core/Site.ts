@@ -2,6 +2,8 @@
 namespace Straw
 {
 	export type PageParam = Element | Element[] | string | string[];
+	export type PageRenderFn = () => PageParam | PageParam[];
+	export type PostRenderFn = () => HTMLElement | HTMLElement[];
 	
 	/** */
 	export class Site
@@ -9,24 +11,16 @@ namespace Straw
 		/** */
 		constructor()
 		{
-			const { Raw } = require("@squaresapp/rawjs");
+			const { Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs")
 			this.rawType = Raw;
 			
 			// Setup the default CSS property list in RawJS.
 			for (const name of Straw.cssProperties)
 				if (!this.rawType.properties.has(name))
 					this.rawType.properties.add(name);
-			
-			//@ts-ignore
-			this.window = new Window({ url: "https://localhost:8080", width: 1024, height: 768 });
-			this.document = this.window.document;
-			(global as any).raw = this.raw = new Raw(this.document);
 		}
 		
-		readonly raw: Raw;
 		private readonly rawType: typeof Raw;
-		readonly document: Document;
-		readonly window: Window;
 		
 		/**
 		 * Initializes a straw website with the necessary packages installed
@@ -38,6 +32,59 @@ namespace Straw
 		}
 		
 		/**
+		 * 
+		 */
+		feed(options: IFeedOptions)
+		{
+			options = Object.assign({ index: "index.txt" }, options);
+			this._feeds.set(options.root || ".", options);
+		}
+		
+		private readonly _feeds = new Map<string, Straw.IFeedOptions>();
+		
+		/**
+		 * Creates a standard HTML page at the specified location.
+		 */
+		page(relativePath: string, renderFn: PageRenderFn): Page;
+		page(relativePath: string, date: Date, renderFn: PageRenderFn): Page;
+		page(relativePath: string, a: any, renderFn?: PageRenderFn)
+		{
+			const fn: PageRenderFn = typeof a === "function" ? a : renderFn;
+			const date = a instanceof Date ? a : undefined;
+			
+			let page = this._pages.get(relativePath);
+			if (!page)
+			{
+				const windowArgs = { url: "https://localhost:8080", width: 1024, height: 1024 };
+				//@ts-ignore
+				const window = new Window(windowArgs);
+				const doc = window.document;
+				const documentElement = doc.createElement("html")
+				const head = doc.createElement("head");
+				const body = doc.createElement("body");
+				documentElement.append(head, body);
+				
+				page = {
+					document: doc,
+					path: relativePath,
+					renderFn: fn,
+					date
+				};
+				
+				this._pages.set(relativePath, page);
+			}
+			
+			return page;
+		}
+		
+		/** */
+		get pages(): readonly Straw.Page[]
+		{
+			return Array.from(this._pages.values());
+		}
+		private readonly _pages = new Map<string, Straw.Page>();
+		
+		/**
 		 * Specifies a favicon to generate during a call to .emit(), using the
 		 * source image. The source directory is searched for an image file
 		 * with the specified name.
@@ -47,13 +94,15 @@ namespace Straw
 		 */
 		icon(iconFileName: string)
 		{
+			this.ensureRenderingPage();
+			
 			this.icons.add(iconFileName);
 			const linkTags: HTMLLinkElement[] = [];
 			
 			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
 			{
 				const name = ImageProcessor.getIconFileName(iconFileName, size);
-				const linkTag = this.raw.link({
+				const linkTag = raw.link({
 					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
 					href: SiteFolder.icon + name,
 				});
@@ -71,67 +120,6 @@ namespace Straw
 		private readonly icons = new Set<string>();
 		
 		/**
-		 * Creates a webfeed post at the specified location.
-		 */
-		post(path: string, date: Date, ...sections: HTMLElement[])
-		{
-			const post: Straw.Post = { path, date, sections };
-			this._posts.set(path, post);
-			return post;
-		}
-		
-		private readonly _posts = new Map<string, Straw.Post>();
-		
-		/**
-		 * 
-		 */
-		feed(options: IFeedOptions)
-		{
-			options = Object.assign({ index: "index.txt" }, options);
-			this._feeds.set(options.root || ".", options);
-		}
-		
-		private readonly _feeds = new Map<string, Straw.IFeedOptions>();
-		
-		/**
-		 * Creates a standard HTML page at the specified location.
-		 */
-		page(path: string, ...params: PageParam[])
-		{
-			let page = this._pages.get(path);
-			if (!page)
-			{
-				const doc = this.window.document;
-				const documentElement = doc.createElement("html")
-				const head = doc.createElement("head");
-				const body = doc.createElement("body");
-				documentElement.append(head, body);
-				
-				page = {
-					documentElement,
-					body,
-					head,
-					path: process.cwd()
-				};
-				
-				this._pages.set(path, page);
-			}
-			
-			// Is this going to handle strings alright?
-			for (const param of params.flat())
-				page.body.append(param);
-			
-			return page;
-		}
-		
-		/** */
-		get pages(): readonly Straw.Page[]
-		{
-			return Array.from(this._pages.values());
-		}
-		private readonly _pages = new Map<string, Straw.Page>();
-		
-		/**
 		 * 
 		 */
 		script(scriptFunction: () => void): HTMLScriptElement;
@@ -141,17 +129,19 @@ namespace Straw
 		script(src: string): HTMLScriptElement;
 		script(arg: (() => void) | string)
 		{
+			this.ensureRenderingPage();
+			
 			if (typeof arg === "string")
 			{
 				if (["http:", "https:", "file:"].some(s => arg.startsWith(s)))
-					return this.raw.script({ src: arg });
+					return raw.script({ src: arg });
 				
-				return this.raw.script(this.raw.text(arg));
+				return raw.script(raw.text(arg));
 			}
 			
 			const fnText = arg.toString().replace(/^\(\)\s*=>/, "");
-			const htmlText = this.raw.text(fnText);
-			const script = this.raw.script(htmlText);
+			const htmlText = raw.text(fnText);
+			const script = raw.script(htmlText);
 			return script;
 		}
 		
@@ -165,99 +155,88 @@ namespace Straw
 			const siteRoot = root.down(ProjectFolder.site);
 			const sourceRoot = root.down(ProjectFolder.source);
 			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
-			const imagePipeline = new ImageRewriter(sourceRoot, imagesSaveRoot);
-			
-			// These elements should be written later
-			const metaElements = new Map<string, HTMLElement[]>();
+			const imageRewriter = new ImageRewriter(sourceRoot, imagesSaveRoot);
+			const pagesToMaybeAugment: string[] = [];
 			
 			for (const feedOptions of this._feeds.values())
 			{
 				const feedFolder = siteRoot.down(feedOptions.root || ".");
 				const feedIndexFile = feedFolder.down("index.txt");
-				const posts: Post[] = [];
+				const feedRelativeRoot = feedOptions.root || "/";
 				
-				for (const [path, post] of this._posts)
-					if( siteRoot.down(path).path.startsWith(feedFolder.path))
-						posts.push(post);
-				
-				const index = posts
-					.sort((a, b) => b.date.getTime() - a.date.getTime())
+				const index = Array.from(this._pages.values())
+					.filter(page => !!page.date)
+					.filter(page => page.path.startsWith(feedRelativeRoot))
+					.sort((a, b) => b.date!.getTime() - a.date!.getTime())
 					.map(p => p.path)
 					.join("\n");
 				
 				await feedIndexFile.writeText(index);
 				
-				// It's necessary to drop an index.html file at the same location as the
-				// corresponding index.txt file, which has the feed meta data. However,
-				// we don't want to just drop this here, because there could be another
-				// index.html file and we don't want to override it. So instead, we just
-				// write the meta elements to a map.
-				
-				const elements: HTMLElement[] = [
-					this.raw.meta({ name: "author", content: feedOptions.author }),
-					this.raw.meta({ name: "description", content: feedOptions.description }),
-				];
-				
-				if (feedOptions.icon)
-					elements.push(...this.icon(feedOptions.icon));
-				
-				if (this._pages.has(feedFolder.path))
-				{
-					metaElements.set(feedOptions.root || ".", elements);
-				}
+				// In order to be compliant with the webfeeds specification, it's necessary
+				// to create a stand-in HTML page at the same location as the corresponding
+				// index.txt file, which has the feed meta data, in the case when there is no
+				// other index.html file exists at the location.
+				if (!this._pages.has(feedRelativeRoot))
+					this.page(feedRelativeRoot, () => this.createFeedMetaElements(feedOptions));
 				else
-				{
-					const htmlContent = new HtmlElementEmitter({
-						rawType: this.rawType,
-						nodes: elements }).emit();
-					
-					const indexHtmlFila = feedFolder.down("index.html");
-					await indexHtmlFila.writeText(htmlContent);
-				}
+					pagesToMaybeAugment.push(feedRelativeRoot);
 			}
 			
-			for (const post of this._posts.values())
+			for (const page of this._pages.values())
 			{
-				await imagePipeline.adjust(...post.sections);
-				const htmlContent = new HtmlElementEmitter(
-					{ rawType: this.rawType,
-					nodes: post.sections }).emit();
+				//# Render the page
+				const g = globalThis as any;
+				g.raw = new this.rawType(page.document);
+				g.t = raw.text.bind(raw);
 				
-				let fila = siteRoot.down(post.path);
+				try
+				{
+					this.renderingPage = page;
+					const result = toArray(page.renderFn()).flat();
+					page.document.body.append(...result);
+				}
+				finally
+				{
+					this.renderingPage = null;
+				}
+				
+				//# Hoist the meta elements
+				const head = page.document.querySelector("head") as HTMLHeadElement;
+				const metaQuery = page.document.body.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
+				for (let i = -1;  ++i < metaQuery.length;)
+					head.append(metaQuery[i]);
+				
+				//# Fix the image URLs
+				await imageRewriter.adjust(page.document.body);
+				
+				//# Inject any missing meta elements caused by any feed definitions.
+				const feedOptions = this._feeds.get(page.path);
+				if (feedOptions)
+				{
+					if (!head.querySelector(`META[name="author"]`))
+						head.append(raw.meta({ name: "author", content: feedOptions.author }));
+					
+					if (!head.querySelector(`META[name="description"]`))
+						head.append(raw.meta({ name: "description", content: feedOptions.description }));
+					
+					if (feedOptions.icon && !head.querySelector(`LINK[rel="icon"]`))
+						head.append(...this.icon(feedOptions.icon));
+				}
+						
+				const htmlContent = new HtmlElementEmitter({
+					rawType: this.rawType,
+					nodes: [page.document.documentElement]
+				}).emit();
+				
+				let fila = siteRoot.down(page.path);
 				if (!fila.name.endsWith(".html"))
 					fila = fila.down("index.html");
 				
 				await fila.writeText(htmlContent);
 			}
 			
-			for (const [path, page] of this._pages)
-			{
-				this.hoistMetaElements(page.documentElement);
-				await imagePipeline.adjust(page.documentElement);
-				
-				const elementsToInject = metaElements.get(path);
-				if (elementsToInject)
-				{
-					metaElements.delete(path);
-					page.head.append(...elementsToInject);
-					
-					// This should probably conditionally inject these only
-					// in the case when they don't already have other meta
-					// tags defined with the same names.
-				}
-				
-				const htmlContent = new HtmlElementEmitter(
-					{ rawType: this.rawType,
-					nodes: [page.documentElement] }).emit();
-				
-				let fila = siteRoot.down(path);
-				if (!fila.name.endsWith(".html"))
-					fila = fila.down("index.html");
-				
-				await fila.writeText(htmlContent);
-			}
-			
-			// Create the /static folder within the site if necessary
+			//# Create the /static folder within the site if necessary
 			const sourceStaticFolder = root.down(ProjectFolder.static);
 			if (await sourceStaticFolder.exists())
 			{
@@ -265,7 +244,7 @@ namespace Straw
 				await destStaticFolder.writeSymlink(sourceStaticFolder);
 			}
 			
-			// Generate any icons
+			//# Generate any icons
 			for (const iconFileName of this.icons)
 			{
 				const imageFila = await ImageProcessor.findImage(sourceRoot, iconFileName);
@@ -277,34 +256,48 @@ namespace Straw
 		}
 		
 		/** */
-		private hoistMetaElements(docElement: HTMLHtmlElement)
+		private createFeedMetaElements(feedOptions: IFeedOptions)
 		{
-			const metaQuery = docElement.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
-			const metaElements: Element[] = [];
-			
-			for (let i = -1;  ++i < metaQuery.length;)
-				metaElements.push(metaQuery[i]);
-			
-			const head = docElement.querySelector("head") as HTMLHeadElement;
-			head.append(...metaElements);
+			return [
+				raw.meta({ name: "author", content: feedOptions.author }),
+				raw.meta({ name: "description", content: feedOptions.description }),
+				...(feedOptions.icon ? this.icon(feedOptions.icon) : [])
+			];
 		}
+		
+		/** */
+		private ensureRenderingPage()
+		{
+			if (this.renderingPage === null)
+				throw new Error("Cannot call this function at this time, because there is no page being rendered.");
+		}
+		
+		private renderingPage: Page | null = null;
+	}
+	
+	/** */
+	function toArray<T>(item: T | T[]): T[]
+	{
+		return Array.isArray(item) ? item : [item];
 	}
 	
 	/** */
 	export interface Page
 	{
+		/**
+		 * Specifies a relative path to the page within the website,
+		 * for example, /products/my-product
+		 */
 		readonly path: string;
-		readonly documentElement: HTMLHtmlElement;
-		readonly head: HTMLHeadElement;
-		readonly body: HTMLBodyElement;
-	}
-	
-	/** */
-	export interface Post
-	{
-		readonly path: string;
-		readonly date: Date;
-		readonly sections: HTMLElement[];
+		
+		/**
+		 * Specifies an optional date that the page was created.
+		 * If included, the page is considered a "post" and can be
+		 * included within a webfeed definition.
+		 */
+		readonly date?: Date;
+		readonly document: Document;
+		readonly renderFn: PageRenderFn;
 	}
 	
 	/** */

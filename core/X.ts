@@ -1,4 +1,6 @@
 
+declare var t: Raw["text"];
+
 namespace Straw
 {
 	Object.assign(globalThis, require("happy-dom"));

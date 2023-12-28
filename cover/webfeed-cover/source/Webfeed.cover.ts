@@ -5,9 +5,8 @@ namespace Cover
 	export async function coverWebfeed()
 	{
 		const straw = new Straw.Site();
-		const raw = straw.raw;
 		
-		straw.page("/",
+		straw.page("/", () => [
 			straw.script(() =>
 			{
 				
@@ -26,23 +25,23 @@ namespace Cover
 				),
 				raw.a("anchor", { href: "/privacy" }),
 			)
-		);
+		]);
 		
-		straw.page("/privacy",
+		straw.page("/privacy", () =>
 			raw.h1(raw.text("Privacy Policy"))
 		);
 		
-		straw.post("/webfeed/post1", new Date(2023, 0, 1),
+		straw.page("/webfeed/post1", new Date(2023, 0, 1), () => [
 			raw.section(),
 			raw.section(),
 			raw.section(),
-		);
+		]);
 		
-		straw.post("/webfeed/post2", new Date(2023, 0, 1),
+		straw.page("/webfeed/post2", new Date(2023, 0, 1), () => [
 			raw.section(),
 			raw.section(),
 			raw.section(),
-		);
+		]);
 		
 		straw.feed({
 			author: "Paul Gordon",
@@ -51,7 +50,7 @@ namespace Cover
 			icon: "sample-icon.png",
 		});
 		
-		setTimeout(() => straw.emit("cover/webfeed-cover"));
+		await straw.emit("cover/webfeed-cover");
 	}
 }
 

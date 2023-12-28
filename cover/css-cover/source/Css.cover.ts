@@ -5,9 +5,8 @@ namespace Cover
 	export async function coverCss()
 	{
 		const straw = new Straw.Site();
-		const raw = straw.raw;
 		
-		straw.page("/",
+		straw.page("/", () =>
 			raw.div(
 				raw.css(
 					">IMG", {
@@ -18,6 +17,6 @@ namespace Cover
 			)
 		);
 		
-		setTimeout(() => straw.emit("cover/css-cover"));
+		await straw.emit("cover/css-cover");
 	}
 }
