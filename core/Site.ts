@@ -178,9 +178,6 @@ namespace Straw
 				for (let i = -1;  ++i < metaQuery.length;)
 					head.append(metaQuery[i]);
 				
-				//# Fix the image URLs
-				await imageRewriter.adjust(body);
-				
 				//# Inject any missing meta elements caused by any feed definitions.
 				const feedOptions = this._feeds.get(page.path);
 				if (feedOptions)
@@ -212,7 +209,6 @@ namespace Straw
 					for (let i = -1; ++i < rawCssRules.length;)
 					{
 						const rule = rawCssRules[i];
-						
 						if (/^\.raw-[a-z0-9]{10,}/.test(rule.cssText))
 						{
 							const clsEnd = rule.cssText.slice(10).search(/[^a-z0-9]/) + 10;
@@ -229,6 +225,9 @@ namespace Straw
 						head.append(style);
 					}
 				}
+				
+				//# Fix the image URLs
+				await imageRewriter.adjust(head, body);
 				
 				const nodes = Array.from(head.children).concat(Array.from(body.children));
 				const htmlContent = new HtmlElementEmitter({ nodes }).emit();
