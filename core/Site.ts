@@ -126,6 +126,13 @@ namespace Straw
 		 */
 		async emit(folder = "")
 		{
+			// Wait until the next turn of the event loop before running
+			// the emit process. This defends against the case when the
+			// call to straw.emit() isn't at the bottom of the file, which
+			// provides an opportunity for the other parts of the user
+			// code to define pages.
+			await new Promise(r => setTimeout(r));
+			
 			const root = Fila.new(process.cwd()).down(folder);
 			const siteRoot = root.down(ProjectFolder.site);
 			const sourceRoot = root.down(ProjectFolder.source);
