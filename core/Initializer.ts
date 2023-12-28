@@ -108,6 +108,7 @@ namespace Straw
 		const topFileLines = [
 			`require("strawjs");`,
 			`const straw = new Straw.Site();`,
+			`straw.emit();`,
 			``
 		];
 		
