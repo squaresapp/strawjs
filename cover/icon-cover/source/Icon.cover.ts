@@ -7,7 +7,7 @@ namespace Cover
 		const straw = new Straw.Site();
 		
 		straw.page("/",
-			straw.icon("sample-icon.png")
+			straw.icon("sample-icon"),
 		);
 		
 		await straw.emit("cover/icon-cover");

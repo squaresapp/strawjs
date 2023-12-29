@@ -15,7 +15,7 @@ namespace Cover
 			
 			raw.div(
 				"class-1 class-2",
-				raw.img("img-cls", { src: "sample-photo?width=300" }),
+				raw.img("img-cls", { src: "sample-photo?w=300" }),
 				raw.img("img-cls", { src: "sample-photo" }),
 				raw.div(
 					"div-img",

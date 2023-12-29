@@ -73,15 +73,17 @@ namespace Straw
 		 */
 		icon(iconFileName: string)
 		{
+			if (iconFileName.includes("?"))
+				throw new Error("Icon files cannot contain image processing parameters.");
+			
 			this.icons.add(iconFileName);
 			const linkTags: HTMLLinkElement[] = [];
 			
 			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
 			{
-				const name = ImageProcessor.getIconFileName(iconFileName, size);
 				const linkTag = raw.link({
 					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
-					href: SiteFolder.icon + name,
+					href: iconFileName + `?w=${size}`,
 				});
 				
 				// This attribute has to be assigned explicitly due to a deficiency of happy-dom.
@@ -136,8 +138,7 @@ namespace Straw
 			const root = Fila.new(process.cwd()).down(folder);
 			const siteRoot = root.down(ProjectFolder.site);
 			const sourceRoot = root.down(ProjectFolder.source);
-			const imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
-			const imageRewriter = new ImageRewriter(sourceRoot, imagesSaveRoot);
+			const imageRewriter = new ImageRewriter(root);
 			const pagesToMaybeAugment: string[] = [];
 			const style = document.head.querySelector<HTMLStyleElement>("STYLE.raw-style-sheet");
 			const rawCssRules = Array.from(style?.sheet?.cssRules || []);

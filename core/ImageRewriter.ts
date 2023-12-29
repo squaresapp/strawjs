@@ -7,10 +7,16 @@ namespace Straw
 	export class ImageRewriter
 	{
 		/** */
-		constructor(
-			private readonly imageSearchRoot: Fila,
-			private readonly imageSaveRoot: Fila)
-		{ }
+		constructor(root: Fila)
+		{
+			this.imageSearchRoot = root.down(ProjectFolder.source);
+			this.imagesSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.images);
+			this.iconsSaveRoot = root.down(ProjectFolder.site).down(SiteFolder.icons);
+		}
+		
+		private readonly imageSearchRoot: Fila;
+		private readonly imagesSaveRoot: Fila;
+		private readonly iconsSaveRoot: Fila;
 		
 		/**
 		 * Scans the specified top-level HTML elements, and their nested elements,
@@ -20,7 +26,7 @@ namespace Straw
 		 * image in the output location.
 		 * 
 		 * The function also deals with image processing. Non-SVG Image URLs can
-		 * have parameters such as width= and height=, which are processed by Photon.
+		 * have parameters such as w= and h=, which are processed by Photon.
 		 */
 		async adjust(...containers: HTMLElement[])
 		{
@@ -40,7 +46,7 @@ namespace Straw
 						
 						const processedFilePath = await ImageProcessor.processImage(
 							imageFila,
-							this.imageSaveRoot,
+							this.imagesSaveRoot,
 							params);
 						
 						propertyValue = 
@@ -58,7 +64,20 @@ namespace Straw
 					if (!imageFila)
 						throw new Error("No image found with name: " + params.name);
 					
-					x.value = await ImageProcessor.processImage(imageFila, this.imageSaveRoot, params);
+					// Icons need to be handled separately than normal images.
+					const e = x.ownerElement as HTMLLinkElement;
+					if (e?.tagName === "LINK" && (e.rel === "icon" || e.rel === "apple-touch-icon"))
+					{
+						const crop = await ImageProcessor.calculateIconCrop(imageFila);
+						if (crop)
+							params.crop = crop;
+						
+						x.value = await ImageProcessor.processImage(imageFila, this.iconsSaveRoot, params);
+					}
+					else
+					{
+						x.value = await ImageProcessor.processImage(imageFila, this.imagesSaveRoot, params);
+					}
 				}
 			}
 		}
@@ -85,7 +104,9 @@ namespace Straw
 					tag === "OBJECT" && e.getAttributeNode("data"),
 					tag === "FORM" && e.getAttributeNode("action"),
 					tag === "LINK" && 
-						(e.getAttribute("rel") ===  "icon" || e.getAttribute("rel") === "shortcut icon") && 
+						(e.getAttribute("rel") ===  "icon" || 
+						e.getAttribute("rel") === "shortcut icon" ||
+						e.getAttribute("rel") === "apple-touch-icon") && 
 						e.getAttributeNode("href"),
 				];
 				
@@ -143,17 +164,17 @@ namespace Straw
 	}
 	
 	/**
-	 * Parses image urls, in the format image.png?width=10,height=10
+	 * Parses image urls, in the format image.png?w=10,h=10
 	 * The image URL may be encapsulated with in a CSS url() definition,
-	 * such as url (image.png?width=10,height=10).
+	 * such as url (image.png?w=10,h=10).
 	 * The supplied string may also contain multiple instances of these
 	 * image definitions.
 	 */
 	function parseImageUrl(value: string): ImageParams[]
 	{
-		const files: ImageParams[] = [];
+		const params: ImageParams[] = [];
 		const urls: { url: string; start: number, end: number }[] = [];
-		const reg = /url\("?([/A-Za-z0-9\.\-\_]+(\?[a-z=\,\d+]+)?)"?\)/g;
+		const reg = /url\("?([/A-Za-z0-9\.\-\_]+(\?[a-z=&\,\d+]+)?)"?\)/g;
 		
 		if (value.includes("url("))
 		{
@@ -176,8 +197,11 @@ namespace Straw
 			let extension = "";
 			let width = 0;
 			let height = 0;
+			let crop: TCrop | null = null;
+			let hue = 0;
+			let sat = 0;
+			let light = 0;
 			let blur = 0;
-			let gray = false;
 			
 			const parts = url.split(imageParamsSplit);
 			name = parts[0];
@@ -188,27 +212,60 @@ namespace Straw
 			
 			if (parts.length > 1)
 			{
-				const params = parts[1].split(",").map(s => s.split("=") as [string, string?]);
-				for (const [k, v] of params)
+				const tokens = parts[1].split(/[&,]/g);
+				
+				for (let i = -1; ++i < tokens.length;)
 				{
-					if (k === "width")
-						width = Number(v) || 0;
+					const token = tokens[i];
+					const k = token.split("=")[0];
+					const n = Number(token.slice(k.length + 1)) || 0;
 					
-					if (k === "height")
-						height = Number(v) || 0;
+					if (k === "crop")
+					{
+						let x1 = n;
+						let y1 = isNumber(tokens[i + 1]) ? Number(tokens[i + 1]) || 0 : 0;
+						let x2 = isNumber(tokens[i + 2]) ? Number(tokens[i + 2]) || 0 : 0;
+						let y2 = isNumber(tokens[i + 3]) ? Number(tokens[i + 3]) || 0 : 0;
+						i += 3;
+						
+						if (x2 === 0 || y2 === 0 || x2 < x1 || y2 < y1)
+							throw new Error("Invalid cropping parameters.");
+						
+						crop = [x1, y1, x2, y2];
+						continue;
+					}
+					
+					if (k === "width" || k === "w")
+						width = n;
+					
+					if (k === "height" || k === "h")
+						height = n;
+					
+					if (k === "hue")
+						hue = n;
+					
+					if (k === "sat")
+						sat = n;
+					
+					if (k === "light")
+						light = n;
 					
 					if (k === "blur")
-						blur = Number(v) || 0;
-					
-					if (k === "gray")
-						gray = true;
+						blur = n;
 				}
 			}
 			
-			files.push({ name, extension, start, end, width, height, blur, gray });
+			params.push({ name, extension, start, end, width, height, crop, hue, sat, light, blur });
 		}
 		
-		return files;
+		return params;
+	}
+	
+	/** */
+	function isNumber(s: string)
+	{
+		const n = parseInt(s);
+		return n === n;
 	}
 	
 	const imageParamsSplit = "?";

@@ -4,15 +4,21 @@ namespace Straw
 	/** */
 	export interface ImageParams
 	{
-		readonly name: string;
-		readonly extension: string;
-		readonly start: number;
-		readonly end: number;
-		readonly width: number;
-		readonly height: number;
-		readonly blur: number;
-		readonly gray: boolean;
+		name: string;
+		extension: string;
+		start: number;
+		end: number;
+		width: number;
+		height: number;
+		crop: TCrop | null;
+		hue: number;
+		sat: number;
+		light: number;
+		blur: number;
 	}
+	
+	/** */
+	export type TCrop = [number, number, number, number];
 	
 	/** @internal */
 	export namespace ImageProcessor
@@ -21,7 +27,7 @@ namespace Straw
 		export async function processIcon(inputImageFile: Fila, siteRootFolder: Fila)
 		{
 			const sizes = Straw.iconSizes.appleTouch.concat(Straw.iconSizes.generic);
-			const iconDestFolder = siteRootFolder.down(SiteFolder.icon);
+			const iconDestFolder = siteRootFolder.down(SiteFolder.icons);
 			
 			let photonImage = await readPhotonImage(inputImageFile);
 			const width = photonImage.get_width();
@@ -40,6 +46,24 @@ namespace Straw
 				const iconResized = photon.resize(photonImage, size, size, 5);
 				await iconDestFile.writeBinary(iconResized.get_bytes());
 			}
+			
+		}
+		
+		/** */
+		export async function calculateIconCrop(iconFile: Fila)
+		{
+			let photonImage = await readPhotonImage(iconFile);
+			const width = photonImage.get_width();
+			const height = photonImage.get_height();
+			if (width === height)
+				return null;
+			
+			const size = Math.min(width, height);
+			const x1 = width / 2 - size / 2;
+			const y1 = height / 2 - size / 2;
+			const x2 = width / 2 + size / 2;
+			const y2 = height / 2 + size / 2;
+			return [x1, y1, x2, y2] as TCrop;
 		}
 		
 		/**
@@ -102,41 +126,50 @@ namespace Straw
 		export const extensions = [".gif", ".png", ".jpg", ".jpeg", ".webp", ".avif", ".bmp", ".svg"];
 		
 		/** */
-		export async function processImage(
-			inputImageFile: Fila,
-			outputImageFolder: Fila,
-			params: ImageParams)
+		export async function processImage(inputFile: Fila, outputFolder: Fila, params: ImageParams)
 		{
-			const imageCrc = await Util.computeFileCrc(inputImageFile);
-			const nameNoExt = inputImageFile.name.slice(0, -inputImageFile.extension.length);
-			const parts = [nameNoExt, imageCrc];
+			const fileCrc = await Util.computeFileCrc(inputFile);
+			const nameNoExt = inputFile.name.slice(0, -inputFile.extension.length);
+			const parts = [nameNoExt, fileCrc];
 			let finalFileName = "";
 			
-			if (inputImageFile.extension === ".svg")
+			if (inputFile.extension === ".svg")
 			{
-				finalFileName = parts.join(".") + inputImageFile.extension;
-				await inputImageFile.copy(outputImageFolder.down(finalFileName));
+				finalFileName = parts.join(".") + inputFile.extension;
+				await inputFile.copy(outputFolder.down(finalFileName));
 			}
 			else
 			{
+				if (params.crop)
+				{
+					const c = params.crop;
+					parts.push(c[0] + "x" + c[1] + "y" + c[2] + "x" + c[3] + "y");
+				}
+				
 				if (params.width)
 					parts.push(params.width + "w");
 				
 				if (params.height)
 					parts.push(params.height + "h");
 				
-				if (params.gray)
-					parts.push("g");
+				if (params.hue)
+					parts.push(params.hue + "hue");
+				
+				if (params.sat)
+					parts.push(params.sat + "sat");
+				
+				if (params.light)
+					parts.push(params.light + "light");
 				
 				if (params.blur)
 					parts.push(params.blur + "b");
 				
-				finalFileName = parts.join(".") + inputImageFile.extension;
-				const finalFila = outputImageFolder.down(finalFileName);
+				finalFileName = parts.join(".") + inputFile.extension;
+				const finalFila = outputFolder.down(finalFileName);
 				
 				if (!await finalFila.exists())
 				{
-					let photonImage = await readPhotonImage(inputImageFile);
+					let photonImage = await readPhotonImage(inputFile);
 					const originalWidth = photonImage.get_width();
 					const originalHeight = photonImage.get_height();
 					const ratio = originalWidth / originalHeight;
@@ -165,11 +198,35 @@ namespace Straw
 						height = originalHeight;
 					}
 					
+					if (params.crop)
+					{
+						const c = params.crop;
+						photonImage = photon.crop(photonImage, c[0], c[1], c[2], c[3]);
+					}
+					
 					if (width !== originalWidth || height !== originalHeight)
 						photonImage = photon.resize(photonImage, width, height, 5);
 					
-					if (params.gray)
-						photon.grayscale(photonImage);
+					if (params.hue)
+					{
+						const hue = params.hue > 0 ? 
+							(params.hue % 360) / 360 :
+							(360 + params.hue % 360) / 360;
+						
+						photon.hue_rotate_hsl(photonImage, hue);
+					}
+					
+					if (params.sat < 0)
+						photon.desaturate_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
+					
+					if (params.sat > 0)
+						photon.saturate_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
+					
+					if (params.light < 0)
+						photon.darken_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
+					
+					if (params.light > 0)
+						photon.lighten_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
 					
 					if (params.blur)
 						photon.gaussian_blur(photonImage, params.blur);

@@ -9,7 +9,7 @@ namespace Straw
 	{
 		resources = "/resources/",
 		scripts = "/resources/scripts/",
-		icon = "/resources/icon/",
+		icons = "/resources/icon/",
 		images = "/resources/images/",
 		fonts = "/resources/fonts/",
 		css = "/resources/css/",
