@@ -8,11 +8,9 @@ namespace Straw
 	export const enum SiteFolder
 	{
 		resources = "/resources/",
-		scripts = "/resources/scripts/",
 		icons = "/resources/icon/",
 		images = "/resources/images/",
 		fonts = "/resources/fonts/",
-		css = "/resources/css/",
 	}
 	
 	/**
