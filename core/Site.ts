@@ -33,6 +33,10 @@ namespace Straw
 		 * Creates a standard HTML page at the specified location.
 		 */
 		page(relativePath: string, ...params: PageParam[]): Page;
+		/**
+		 * Creates a webfeed-aware page at the specified location,
+		 * which is posted at the specified time.
+		 */
 		page(relativePath: string, date: Date, ...params: PageParam[]): Page;
 		page(relativePath: string, a: any, ...params: PageParam[])
 		{
