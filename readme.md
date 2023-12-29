@@ -1,6 +1,6 @@
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/squaresapp/strawjs/blob/main/readme-logo-black.png?raw=true">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/squaresapp/strawjs/blob/main/readme-logo-black.png?raw=true" style="max-width: 300px">
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/squaresapp/strawjs/blob/main/readme-logo-white.png?raw=true">
   <img alt="StrawJS" src="https://github.com/squaresapp/strawjs/blob/main/readme-logo-white.png?raw=true">
 </picture>
