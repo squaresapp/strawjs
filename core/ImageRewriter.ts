@@ -44,14 +44,15 @@ namespace Straw
 						if (!imageFila)
 							throw new Error("No image found with name: " + params.name);
 						
-						const processedFilePath = await ImageProcessor.processImage(
+						const dstFileName = await ImageProcessor.processImage(
 							imageFila,
 							this.imagesSaveRoot,
 							params);
 						
 						propertyValue = 
 							propertyValue.slice(0, params.start) +
-							processedFilePath +
+							SiteFolder.images + 
+							dstFileName +
 							propertyValue.slice(params.end);
 					}
 					
@@ -72,11 +73,15 @@ namespace Straw
 						if (crop)
 							params.crop = crop;
 						
-						x.value = await ImageProcessor.processImage(imageFila, this.iconsSaveRoot, params);
+						x.value = 
+							SiteFolder.icons + 
+							await ImageProcessor.processImage(imageFila, this.iconsSaveRoot, params);
 					}
 					else
 					{
-						x.value = await ImageProcessor.processImage(imageFila, this.imagesSaveRoot, params);
+						x.value = 
+							SiteFolder.images + 
+							await ImageProcessor.processImage(imageFila, this.imagesSaveRoot, params);
 					}
 				}
 			}

@@ -235,7 +235,7 @@ namespace Straw
 				}
 			}
 			
-			return SiteFolder.images + finalFileName;
+			return finalFileName;
 		}
 		
 		/** */
