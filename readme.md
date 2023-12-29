@@ -7,7 +7,7 @@
 </picture>
 </div>
 
-StrawJS is a static site generation library built to leverage the powerful ergonomics found in [RawJS](https://www.squaresapp.org/rawjs/). With the help of [Happy DOM](https://github.com/capricorn86/happy-dom), your website becomes a runnable block of JavaScript, rather than code written in a pile of preprocessor languages.
+StrawJS is a static site generation library built to leverage the powerful ergonomics found in [RawJS](https://www.squaresapp.org/rawjs/). With the help of [Happy DOM](https://github.com/capricorn86/happy-dom), your website becomes a runnable block of JavaScript, rather than code written in a pile of different preprocessor languages.
 
 ## About
 
