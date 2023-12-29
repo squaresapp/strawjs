@@ -11,6 +11,11 @@ StrawJS is a new approach to static site generation. In StrawJs, your website so
 
 Straw is a static site generator built on RawJS. It's designed to transform your website source code is a runnable block of JavaScript that leverages the powerful ergonomics found in RawJS. 
 
-For more information, visit the [StrawJS website](https://www.squaresapp.org/strawjs/)
 
-## Installation
+## About
+
+Please visit the [StrawJS website](https://www.squaresapp.org/strawjs/).
+
+## Documentation
+
+Please visit the [StrawJS documentation page](https://www.squaresapp.org/strawjs/).
