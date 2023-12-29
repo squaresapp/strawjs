@@ -7,10 +7,10 @@
 </picture>
 </div>
 
-Straw is a static site generator built on RawJS. Straw is being used in production, but it's API is unstable and is subject to changes. Full readme and documentation to come shortly.
+StrawJS is a new approach to static site generation. In StrawJs, your website source code is a runnable block of JavaScript that leverages the powerful ergonomics found in RawJS. StrawJS isn't another pile of plugins, preprocessors, and configuration. Rather, it's a lightweight static site generation library.
+
+Straw is a static site generator built on RawJS. It's designed to transform your website source code is a runnable block of JavaScript that leverages the powerful ergonomics found in RawJS. 
+
+For more information, visit the [StrawJS website](https://www.squaresapp.org/strawjs/)
 
 ## Installation
-
-```
-npm install strawjs -g
-```
