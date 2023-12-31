@@ -170,10 +170,22 @@ namespace Straw
 				if (!await finalFila.exists())
 				{
 					let photonImage = await readPhotonImage(inputFile);
-					const originalWidth = photonImage.get_width();
-					const originalHeight = photonImage.get_height();
-					const ratio = originalWidth / originalHeight;
+					let fallbackWidth = 0;
+					let fallbackHeight = 0;
 					
+					if (params.crop)
+					{
+						const [x1, y1, x2, y2] = params.crop;
+						fallbackWidth = x2- x1;
+						fallbackHeight = y2 - y1;
+					}
+					else
+					{
+						fallbackWidth = photonImage.get_width();
+						fallbackHeight = photonImage.get_height();
+					}
+					
+					const ratio = fallbackWidth / fallbackHeight;
 					let width = 0;
 					let height = 0;
 					
@@ -194,8 +206,8 @@ namespace Straw
 					}
 					else
 					{
-						width = originalWidth;
-						height = originalHeight;
+						width = fallbackWidth;
+						height = fallbackHeight;
 					}
 					
 					if (params.crop)
@@ -204,7 +216,7 @@ namespace Straw
 						photonImage = photon.crop(photonImage, c[0], c[1], c[2], c[3]);
 					}
 					
-					if (width !== originalWidth || height !== originalHeight)
+					if (width !== fallbackWidth || height !== fallbackHeight)
 						photonImage = photon.resize(photonImage, width, height, 5);
 					
 					if (params.hue)
