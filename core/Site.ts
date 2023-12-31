@@ -197,6 +197,20 @@ namespace Straw
 						head.append(...this.icon(feedOptions.icon));
 				}
 				
+				//# Optimize duplicate head section elements
+				const headElements = Array.from(head.children);
+				const definitions = new Set<string>();
+				
+				for (let i = headElements.length; i-- > 0;)
+				{
+					const e = headElements[i];
+					const html = e.outerHTML;
+					if (definitions.has(html))
+						e.remove();
+					else
+						definitions.add(html);
+				}
+				
 				//# Relocate any relevant CSS rules that landed in the global style sheet.
 				if (rawCssRules.length > 0)
 				{

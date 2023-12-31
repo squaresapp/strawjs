@@ -7,6 +7,12 @@ namespace Cover
 		const straw = new Straw.Site();
 		
 		straw.page("/",
+			raw.meta({ name: "a", content: "b" }),
+			raw.meta({ name: "a", content: "b" }),
+			
+			raw.link({ rel: "a", href: "b" }),
+			raw.link({ rel: "a", href: "b" }),
+			
 			straw.script(() =>
 			{
 				
