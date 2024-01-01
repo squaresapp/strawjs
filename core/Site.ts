@@ -32,32 +32,30 @@ namespace Straw
 		/**
 		 * Creates a standard HTML page at the specified location.
 		 */
-		page(relativePath: string, ...params: PageParam[]): Page;
+		page(relativePath: string, ...params: PageParam[]): void;
 		/**
 		 * Creates a webfeed-aware page at the specified location,
 		 * which is posted at the specified time.
 		 */
-		page(relativePath: string, date: Date, ...params: PageParam[]): Page;
+		page(relativePath: string, date: Date, ...params: PageParam[]): void;
 		page(relativePath: string, a: any, ...params: PageParam[])
 		{
 			let date: Date | undefined;
+			params = params.flat();
 			
 			if (!(a instanceof Date))
 				params.unshift(a);
 			else
 				date = a;
 			
-			let page = this._pages.get(relativePath);
-			if (!page)
-			{
-				this._pages.set(relativePath, page = {
-					path: relativePath,
-					date,
-					params
-				});
-			}
+			if (this._pages.has(relativePath))
+				throw new Error("A page already exists at the path: " + relativePath);
 			
-			return page;
+			this._pages.set(relativePath, {
+				path: relativePath,
+				date,
+				params
+			});
 		}
 		
 		/** */
