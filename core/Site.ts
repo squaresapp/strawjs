@@ -48,13 +48,16 @@ namespace Straw
 			else
 				date = a;
 			
+			relativePath = Fila.join(relativePath, "index.html");
+			
 			if (this._pages.has(relativePath))
 				throw new Error("A page already exists at the path: " + relativePath);
 			
 			this._pages.set(relativePath, {
 				path: relativePath,
 				date,
-				params
+				params,
+				hasOnlyTextContent: false,
 			});
 		}
 		
@@ -64,6 +67,25 @@ namespace Straw
 			return Array.from(this._pages.values());
 		}
 		private readonly _pages = new Map<string, Straw.Page>();
+		
+		/**
+		 * Creates a file at the specified location.
+		 * 
+		 * This method is similar to straw.page, however, the relativePath
+		 * argument is interpreted as a path to a file rather than a path to
+		 * a folder that has an index.html file in it.
+		 */
+		file(relativePath: string, content: string)
+		{
+			if (this._pages.has(relativePath))
+				throw new Error("A page already exists at the path: " + relativePath);
+			
+			this._pages.set(relativePath, {
+				path: relativePath,
+				params: [content],
+				hasOnlyTextContent: true,
+			});
+		}
 		
 		/**
 		 * Specifies a favicon to generate during a call to .emit(), using the
@@ -172,6 +194,14 @@ namespace Straw
 			
 			for (const page of this._pages.values())
 			{
+				const pageFila = siteRoot.down(page.path);
+				if (page.hasOnlyTextContent)
+				{
+					const textContent = page.params.filter(s => typeof s === "string").join("");
+					pageFila.writeText(textContent);
+					continue;
+				}
+				
 				const params = page.params.flat().map(p => typeof p === "string" ? raw.text(p) : p);
 				const head = raw.head();
 				const body = raw.body(params);
@@ -271,12 +301,7 @@ namespace Straw
 				
 				const nodes = Array.from(head.children).concat(Array.from(body.children));
 				const htmlContent = new HtmlElementEmitter({ nodes }).emit();
-				
-				let fila = siteRoot.down(page.path);
-				if (!fila.name.endsWith(".html"))
-					fila = fila.down("index.html");
-				
-				await fila.writeText(htmlContent);
+				await pageFila.writeText(htmlContent);
 			}
 			
 			//# Create the /static folder within the site if necessary
@@ -342,6 +367,12 @@ namespace Straw
 		 * organized into body and head elements during emit.
 		 */
 		readonly params: PageParam[];
+		
+		/**
+		 * Specifies whether the Page was created with the Straw.file
+		 * method (and contains raw text content).
+		 */
+		readonly hasOnlyTextContent: boolean;
 	}
 	
 	/** */

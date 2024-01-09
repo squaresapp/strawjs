@@ -30,6 +30,7 @@
 		"core/**/*.ts",
 		"core/**/*.tsx",
 		"core/X.ts",
-		"cover/**/*.ts"
+		"cover/**/*.ts",
+		"cover/**/*.tsx"
 	]
 }
