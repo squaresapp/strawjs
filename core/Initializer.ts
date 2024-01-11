@@ -49,7 +49,11 @@ namespace Straw
 				jsxFactory: "raw.jsx",
 				lib: ["dom", "esnext"]
 			},
-			include: [ProjectFolder.source + "**/*.ts"]
+			include: [
+				"./node_modules/@squaresapp/rawjs/*.ts",
+				"./node_modules/strawjs/*.ts",
+				"./" + ProjectFolder.source + "**/*.ts",
+			]
 		}
 		
 		const tsconfigJsonText = JSON.stringify(tsconfig, null, "\t");
