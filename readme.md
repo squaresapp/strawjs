@@ -7,11 +7,15 @@
 </picture>
 </div>
 
-StrawJS is a static site generation library built to leverage the powerful ergonomics found in [RawJS](https://www.squaresapp.org/rawjs/). With the help of [Happy DOM](https://github.com/capricorn86/happy-dom), your website becomes a runnable block of JavaScript, rather than code written in a pile of different preprocessor languages.
+StrawJS is a static site generation library built to leverage the powerful ergonomics found in [RawJS](https://www.squaresapp.org/rawjs/). With the help of a server-side DOM simulator, your website becomes a runnable block of JavaScript, rather than code written in a pile of different preprocessor languages.
 
 ## About
 
 Please visit the [StrawJS website](https://www.squaresapp.org/strawjs/).
+
+## Project Status
+
+StrawJS is working and being used in production (it's being to create the [Squares](https://www.squaresapp.org/) website, as well as for a few other sites which aren't public). It's stable enough for short-lifespam projects, and it's not going away any time soon (too much is depending on it). However, I'd like to offer some caution before making a large bet on it. We need to migrate the DOM simulator from HappyDOM to LinkeDOM, and there are aspects of the public API that need a second look, so there is perhaps a higher-than-acceptable probability of breaking changes coming down the pipe.
 
 ## Documentation
 
