@@ -142,25 +142,11 @@ namespace Straw
 		private readonly icons = new Set<string>();
 		
 		/**
-		 * 
+		 * Defines a function to execute on the client.
 		 */
-		script(scriptFunction: () => void): HTMLScriptElement;
-		/**
-		 * A script URL to download and include in the /resources/scripts folder
-		 */
-		script(src: string): HTMLScriptElement;
-		script(arg: (() => void) | string)
+		script(clientFunction: () => void): HTMLScriptElement
 		{
-			if (typeof arg === "string")
-			{
-				if (["http:", "https:", "file:"].some(s => arg.startsWith(s)))
-					return raw.script({ src: arg });
-				
-				return raw.script(raw.text(arg));
-			}
-			
-			const fnText = arg.toString().replace(/^\(\)\s*=>/, "");
-			const htmlText = raw.text(fnText);
+			const htmlText = raw.text("(" + clientFunction.toString() + ")()");
 			const script = raw.script(htmlText);
 			return script;
 		}
