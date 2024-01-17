@@ -27,7 +27,10 @@ namespace Cover
 					"div-img",
 					{
 						backgroundImage: `url(sample-background)`
-					}
+					},
+					raw.css(":hover", {
+						background: "red"
+					})
 				),
 				raw.a("anchor", { href: "/privacy" }),
 			)
@@ -57,6 +60,7 @@ namespace Cover
 		});
 		
 		await straw.emit("cover/webfeed-cover");
+		console.log("Done");
 	}
 }
 

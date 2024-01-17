@@ -35,7 +35,8 @@ namespace Straw
 		{
 			yield container;
 			const doc = container.ownerDocument;
-			const walker = doc.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+			const filter = 1; // NodeFilter.SHOW_ELEMENT
+			const walker = doc.createTreeWalker(container, filter);
 			while (walker.nextNode())
 				if (walker.currentNode instanceof HTMLElement)
 					yield walker.currentNode;

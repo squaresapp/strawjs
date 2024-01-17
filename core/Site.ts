@@ -48,6 +48,25 @@ namespace Straw
 			else
 				date = a;
 			
+			// Any CSS rules that were added to RawJS's global style sheet need to be relocated
+			// to a new <style> element, which is then turned into a param.
+			const headElements = Array.from(document.head.children);
+			const rawJsStyleTag = headElements.find(e => e.className === "raw-style-sheet") as HTMLStyleElement;
+			if (rawJsStyleTag?.sheet)
+			{
+				const sheet = rawJsStyleTag.sheet;
+				if (sheet.cssRules.length > 0)
+				{
+					const cssText = sheet.toString();
+					
+					while (sheet.cssRules.length > 0)
+						sheet.deleteRule(0);
+					
+					const localStyleTag = raw.style(raw.text(cssText.trim()));
+					params.push(localStyleTag);
+				}
+			}
+			
 			relativePath = Fila.join(relativePath, "index.html");
 			
 			if (this._pages.has(relativePath))
@@ -237,63 +256,6 @@ namespace Straw
 						e.remove();
 					else
 						definitions.add(html);
-				}
-				
-				//# Relocate any relevant CSS rules that landed in the global style sheet.
-				if (rawCssRules.length > 0)
-				{
-					const classNamesInUse = new Set<string>();
-					for (const e of Util.walkElementTree(body))
-					{
-						e.classList.forEach(cls =>
-						{
-							if (/^raw-[a-z0-9]{10,}$/.test(cls))
-								classNamesInUse.add(cls);
-						});
-					}
-					
-					const rulesExtracted: string[] = [];
-					for (let i = -1; ++i < rawCssRules.length;)
-					{
-						const rule = rawCssRules[i];
-						if (/^\.raw-[a-z0-9]{10,}/.test(rule.cssText))
-						{
-							const clsEnd = rule.cssText.slice(10).search(/[^a-z0-9]/) + 10;
-							const cls = rule.cssText.slice(1, clsEnd);
-							if (classNamesInUse.has(cls))
-								rulesExtracted.push(rule.cssText);
-						}
-					}
-					
-					if (rulesExtracted.length > 0)
-					{
-						// This code is a bit weird. We have to rewrite the image paths
-						// that are stored within CSS rules that are stored within <style>
-						// elements. However, the .sheet property of a style tag is only
-						// available when the containing <style> tag is present within
-						// some DOM, and the DOM in our case is shared between all
-						// pages, and we have to avoid inserting elements into it. So we
-						// have to set the .textContent of the style tag, rewrite the paths,
-						// then re-update the .textContent property again after the rewrite,
-						// and then remove the <style> element from the global DOM.
-						// This way, when the <style> tag is emitted, the emitter will see
-						// the updated textContent defined within the <style> element,
-						// and won't need to traverse into it's cssRules (which won't be
-						// available when the <style> tag is removed from the DOM.
-						
-						const style = raw.style();
-						document.head.append(style);
-						style.textContent = rulesExtracted.join("\n");
-						await imageRewriter.adjust(style);
-						
-						const cssTexts: string[] = [];
-						for (const rule of Array.from(style.sheet!.cssRules))
-							cssTexts.push(rule.cssText);
-						
-						style.textContent = cssTexts.join("\n");
-						style.remove();
-						head.append(style);
-					}
 				}
 				
 				//# Fix the image URLs

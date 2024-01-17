@@ -3,8 +3,6 @@ declare var t: Raw["text"];
 
 namespace Straw
 {
-	Object.assign(globalThis, require("happy-dom"));
-	
 	// Defining this causes the types for Fila to become visible,
 	// even though its not exported.
 	type F = typeof import("fila-core");
@@ -12,10 +10,16 @@ namespace Straw
 	g.Fila = require("fila-core").Fila;
 	require("fila-node").FilaNode.use();
 	
-	const arg = { url: "https://localhost:8080" };
-	//@ts-ignore
-	g.window = new Window(arg);
-	g.document = window.document;
+	const linkedom = require("linkedom");
+	Object.assign(globalThis, linkedom);
+	
+	// Create a baseline document. This document will get re-used
+	// for every page that is generated, though each page gets its
+	// own <head> and <body> elements.
+	const parsed = linkedom.parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+	const { window, document } = parsed;
+	g.window = window;
+	g.document = document;
 	
 	const { raw, Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs")
 	g.Raw = Raw;
@@ -29,4 +33,12 @@ namespace Straw
 	
 	// Straw needs to be a global.
 	g.Straw = Straw;
+	
+	// Monkey-patch the CSSOM dependency (fixes a bug in this library that affects RawJS)
+	const proto = document.createElement("style").sheet!.constructor.prototype;
+	const insertRule = proto.insertRule;
+	proto.insertRule = function(this: any, rule: any, index = this.cssRules.length)
+	{
+		return insertRule.call(this, rule, index);
+	};
 }

@@ -6,7 +6,7 @@ namespace Cover
 	{
 		const straw = new Straw.Site();
 		
-		straw.page("/",
+		straw.page("/page-1",
 			raw.div(
 				raw.css(
 					"&", {
@@ -15,6 +15,16 @@ namespace Cover
 					">IMG", {
 						border: "10px solid red",
 						backgroundImage: `url(sample-photo)`
+					}
+				)
+			)
+		);
+		
+		straw.page("/page-2",
+			raw.div(
+				raw.css(
+					">DIV", {
+						backgroundImage: `linear-gradient(blue, red)`
 					}
 				)
 			)
