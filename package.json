@@ -19,6 +19,7 @@
 		"access": "public"
 	},
 	"files": [
+		"readme.md",
 		"LICENSE.txt",
 		"straw.js",
 		"straw.d.ts",
