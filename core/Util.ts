@@ -22,9 +22,8 @@ namespace Straw
 		 */
 		export async function computeFileCrc(fila: Fila)
 		{
-			const crc = require("crc-32") as typeof import("crc-32");
 			const contents = new Uint8Array(await fila.readBinary());
-			const num = crc.buf(contents) + (2 ** 32 / 2);
+			const num = Straw.crc32.buf(contents) + (2 ** 32 / 2);
 			return num.toString(36);
 		}
 		
