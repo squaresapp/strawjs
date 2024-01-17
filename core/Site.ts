@@ -209,7 +209,8 @@ namespace Straw
 				
 				const params = page.params.flat().map(p => typeof p === "string" ? raw.text(p) : p);
 				const head = raw.head();
-				const body = raw.body(params);
+				const hasTopLevelBody = params.length === 1 && params[0].nodeName === "BODY";
+				const body = (hasTopLevelBody ? params[0] : raw.body(params)) as HTMLBodyElement;
 				
 				//# Hoist the meta elements
 				const metaQuery = body.querySelectorAll("LINK, META, TITLE, STYLE, BASE");
@@ -247,7 +248,13 @@ namespace Straw
 				//# Fix the image URLs
 				await imageRewriter.adjust(head, body);
 				
-				const nodes = Array.from(head.children).concat(Array.from(body.children));
+				const nodes = Array.from(head.children);
+				
+				if (body.attributes.length === 0)
+					nodes.push(...Array.from(body.children));
+				else
+					nodes.push(body);
+				
 				const htmlContent = new HtmlElementEmitter({ nodes }).emit();
 				await pageFila.writeText(htmlContent);
 			}

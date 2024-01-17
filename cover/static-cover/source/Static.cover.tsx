@@ -35,4 +35,19 @@ namespace Cover
 		await straw.emit("cover/static-cover");
 		console.log("Done");
 	}
+	
+	/** */
+	export async function coverTopLevelBody()
+	{
+		const straw = new Straw.Site();
+		
+		straw.page("/", 
+			<body>
+				<p>This is a paragraph</p>
+			</body>
+		);
+		
+		await straw.emit("cover/static-cover");
+		console.log("Done");
+	}
 }
