@@ -1,7 +1,12 @@
+/*
+crc32.js (C) 2014-present SheetJS -- http://sheetjs.com
+Code adapted to compile under TypeScript
+*/
 
 namespace Straw
 {
-	/*! crc32.js (C) 2014-present SheetJS -- http://sheetjs.com */
+	
+	/** @internal */
 	export const crc32 = (() =>
 	{
 		var CRC32: any = {};
