@@ -261,7 +261,15 @@ namespace Straw
 			return photonImage;
 		}
 		
-		const photon = require("@silvia-odwyer/photon-node") as 
-			typeof import("@silvia-odwyer/photon-node");
+		const photon: typeof import("@silvia-odwyer/photon-node") = (() =>
+		{
+			if (NODE)
+				return require("@silvia-odwyer/photon-node");
+			
+			if (TAURI)
+				return Util.getImport("./photon_rs.js");
+			
+			throw new Error("Unsupported platform");
+		})();
 	}
 }

@@ -17,6 +17,15 @@ namespace Straw
 		}
 		
 		/**
+		 * Imports a module using the provided specifier.
+		 */
+		export async function getImport(specifier: string)
+		{
+			const asyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+			return await (new asyncFunction("return await import('" + specifier + "')"))();
+		}
+		
+		/**
 		 * Computes a string-based CRC value for the contents of
 		 * the file located at the specified location
 		 */
