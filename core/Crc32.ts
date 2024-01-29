@@ -5,7 +5,6 @@ Code adapted to compile under TypeScript
 
 namespace Straw
 {
-	
 	/** @internal */
 	export const crc32 = (() =>
 	{
