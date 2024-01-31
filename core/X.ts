@@ -8,6 +8,9 @@ namespace Straw
 	type F = typeof import("fila-core");
 	const g = globalThis as any;
 	
+	// Straw needs to be a global.
+	g.Straw = Straw;
+	
 	if (NODE)
 	{
 		g.Fila = require("fila-core").Fila;
@@ -42,7 +45,4 @@ namespace Straw
 			return insertRule.call(this, rule, index);
 		};
 	}
-	
-	// Straw needs to be a global.
-	g.Straw = Straw;
 }

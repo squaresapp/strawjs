@@ -26,6 +26,7 @@ namespace Straw
 		/** */
 		export async function processIcon(inputImageFile: Fila, siteRootFolder: Fila)
 		{
+			const photon = await getPhoton();
 			const sizes = Straw.iconSizes.appleTouch.concat(Straw.iconSizes.generic);
 			const iconDestFolder = siteRootFolder.down(SiteFolder.icons);
 			
@@ -128,6 +129,7 @@ namespace Straw
 		/** */
 		export async function processImage(inputFile: Fila, outputFolder: Fila, params: ImageParams)
 		{
+			const photon = await getPhoton();
 			const fileCrc = await Util.computeFileCrc(inputFile);
 			const nameNoExt = inputFile.name.slice(0, -inputFile.extension.length);
 			const parts = [nameNoExt, fileCrc];
@@ -257,19 +259,25 @@ namespace Straw
 				throw console.error("File does not exist: " + imageFila.path);
 			
 			const bytes = new Uint8Array(await imageFila.readBinary());
-			const photonImage = photon.PhotonImage.new_from_byteslice(bytes);
+			const photonImage = (await getPhoton()).PhotonImage.new_from_byteslice(bytes);
 			return photonImage;
 		}
 		
-		const photon: typeof import("@silvia-odwyer/photon-node") = (() =>
+		/** */
+		async function getPhoton(): Promise<typeof import("@silvia-odwyer/photon-node")>
 		{
+			if (_photon)
+				return _photon;
+			
 			if (NODE)
-				return require("@silvia-odwyer/photon-node");
+				return _photon = require("@silvia-odwyer/photon-node");
 			
 			if (TAURI)
-				return Util.getImport("./photon_rs.js");
+				return _photon = await Util.getImport("./photon_rs.js");
 			
 			throw new Error("Unsupported platform");
-		})();
+		}
+		
+		let _photon: typeof import("@silvia-odwyer/photon-node") | null = null;
 	}
 }

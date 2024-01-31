@@ -1,9 +1,6 @@
 
 namespace Straw
 {
-	const cp = require("child_process") as typeof import("child_process");
-	const readline = require("readline") as typeof import("readline");
-	
 	/** */
 	export interface InitOptions
 	{
@@ -127,6 +124,7 @@ namespace Straw
 			.writeText(`\n// TODO: Create your home page in this TypeScript file.\n`);
 		
 		let includesVite = false;
+		const cp = require("child_process") as typeof import("child_process");
 		
 		try
 		{
@@ -149,10 +147,11 @@ namespace Straw
 		]);
 	}
 	
-	setTimeout(async () =>
+	NODE && setTimeout(async () =>
 	{
 		if (require.main === module && process.argv.includes("init"))
 		{
+			const readline = require("readline") as typeof import("readline");
 			const rl = readline.createInterface({
 				input: process.stdin,
 				output: process.stdout,
