@@ -10,13 +10,13 @@ namespace Straw
 	
 	/**
 	 * @internal
-	 * Initializes a straw website with the necessary packages installed
+	 * Creates a straw website with the necessary packages installed
 	 * and the default directories required.
 	 */
-	export async function init(options: InitOptions)
+	export async function create(options: InitOptions)
 	{
 		const path = options.path || "";
-		const initRoot = Fila.new(process.cwd()).down(path);
+		const initRoot = new Fila(process.cwd()).down(path);
 		const name = options.name;
 		
 		const packageJson = {
@@ -165,7 +165,7 @@ namespace Straw
 			});
 			
 			console.log("Creating...");
-			await init({ name });
+			await Straw.create({ name });
 			console.log("Site created. Now open the generated .code-workspace file.");
 			process.exit(0);
 		}

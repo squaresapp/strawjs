@@ -1,0 +1,65 @@
+ {
+	"folders": [
+		{
+			"path": ".",
+		},
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/node_modules": true,
+			"**/package-lock.json": true,
+			"*.tsbuildinfo": true,
+			"*.d.ts.map": true,
+		},
+		"search.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/build": true,
+			"**/node_modules": true,
+			"**/package-lock.json": true
+		},
+		"task.allowAutomaticTasks": "on",
+	},
+	"launch": {
+		"configurations": [
+			{
+				"name": "Debug",
+				"type": "node",
+				"request": "launch",
+				"cwd": "${workspaceFolder}",
+				"program": "${workspaceFolder}/+build/straw.debug.js",
+				"sourceMaps": true,
+			}
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "Compile Library",
+				"type": "shell",
+				"command": "tsc",
+				"args": [
+					"--build",
+					"--watch"
+				],
+				"options": {
+					"cwd": "${workspaceRoot}"
+				},
+				"problemMatcher": [
+					"$tsc"
+				],
+				"runOptions": {
+					"runOn": "folderOpen"
+				},
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				},
+				"isBackground": true
+			}
+		]
+	}
+}

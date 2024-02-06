@@ -3,31 +3,95 @@ declare var t: Raw["text"];
 
 namespace Straw
 {
-	// Defining this causes the types for Fila to become visible,
-	// even though its not exported.
-	type F = typeof import("fila-core");
-	const g = globalThis as any;
+	/**
+	 * @internal
+	 */
+	export declare const ts: typeof import("typescript");
 	
-	// Straw needs to be a global.
-	g.Straw = Straw;
+	/**
+	 * @internal
+	 */
+	export declare const photon: typeof import("@silvia-odwyer/photon-node");
+	
+	/**
+	 * @internal
+	 */
+	export declare const Fila: typeof import("@squaresapp/fila");
+	
+	/**
+	 * @internal
+	 * Runs the initialization of StrawJS in the browser.
+	 */
+	export async function maybeSetupBrowser()
+	{
+		Straw.maybeSetupBrowser = () => Promise.resolve();
+		
+		const promises = [
+			getScript("./photon.js", "photon"),
+			getScript("./typescript.js", "ts"),
+			getScript("./fila.js", "Fila"),
+			getScript("./raw.min.js", "raw")
+		];
+		
+		if (WEB)
+			promises.push(getScript("./keyva.min.js", "Keyva"));
+		
+		const deps = await Promise.all(promises);
+		const st = Straw as any;
+		st.photon = deps[0];
+		st.ts = deps[1];
+		st.Fila = deps[2];
+		
+		// This has to be called in order to get our
+		// hacked version of photon working in the browser.
+		await st.photon.init();
+	}
+	
+	/**
+	 * Imports JavaScript code by temporarily including a <script>
+	 * tag in the browser, and returning it's top-level export.
+	 */
+	function getScript(src: string, exportName: string)
+	{
+		return new Promise<any>(r =>
+		{
+			if (currentScript)
+			{
+				const base = currentScript.src;
+				src = base.split("?")[0].split("/").slice(0, -1).join("/") + "/" + src;
+			}
+			
+			const script = document.createElement("script");
+			script.src = src;
+			script.onload = () =>
+			{
+				const exp = (new Function("return " + exportName))();
+				script.remove();
+				r(exp);
+			};
+			document.head.append(script);
+		});
+	}
+	
+	let currentScript: HTMLScriptElement | null = null;
 	
 	if (NODE)
 	{
-		g.Fila = require("fila-core").Fila;
-		require("fila-node").FilaNode.use();
+		const g = globalThis as any;
 		
 		const linkedom = require("linkedom");
-		Object.assign(globalThis, linkedom);
+		Object.assign(g, linkedom);
 		
 		// Create a baseline document. This document will get re-used
 		// for every page that is generated, though each page gets its
 		// own <head> and <body> elements.
-		const parsed = linkedom.parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+		const html = "<!DOCTYPE html><html><head></head><body></body></html>";
+		const parsed = linkedom.parseHTML(html);
 		const { window, document } = parsed;
 		g.window = window;
 		g.document = document;
 		
-		const { raw, Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs")
+		const { raw, Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
 		g.Raw = Raw;
 		g.raw = raw;
 		g.t = raw.text.bind(raw);
@@ -44,5 +108,22 @@ namespace Straw
 		{
 			return insertRule.call(this, rule, index);
 		};
+		
+		{
+			const s = Straw as any;
+			s.photon = require("@silvia-odwyer/photon-node");
+			s.ts = require("./typescript.js");
+			s.Fila = require("@squaresapp/fila").Fila;
+		}
+		
+		// Auto-emit if StrawJS was being run directly from the command line
+		// (as opposed to be used by the 
+		if (require.main === module)
+			setTimeout(() => Straw.emit(process.cwd()));
+	}
+	else
+	{
+		currentScript = document.currentScript as HTMLScriptElement;
+		Straw.emit("/");
 	}
 }

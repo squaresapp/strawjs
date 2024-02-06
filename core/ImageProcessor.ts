@@ -26,7 +26,6 @@ namespace Straw
 		/** */
 		export async function processIcon(inputImageFile: Fila, siteRootFolder: Fila)
 		{
-			const photon = await getPhoton();
 			const sizes = Straw.iconSizes.appleTouch.concat(Straw.iconSizes.generic);
 			const iconDestFolder = siteRootFolder.down(SiteFolder.icons);
 			
@@ -38,16 +37,15 @@ namespace Straw
 			const x2 = width / 2 + size / 2;
 			const y1 = height / 2 - size / 2;
 			const y2 = height / 2 + size / 2;
-			photonImage = photon.crop(photonImage, x1, y1, x2, y2);
+			photonImage = Straw.photon.crop(photonImage, x1, y1, x2, y2);
 			
 			for (const size of sizes)
 			{
 				const name = getIconFileName(inputImageFile.name, size);
 				const iconDestFile = iconDestFolder.down(name);
-				const iconResized = photon.resize(photonImage, size, size, 5);
+				const iconResized = Straw.photon.resize(photonImage, size, size, 5);
 				await iconDestFile.writeBinary(iconResized.get_bytes());
 			}
-			
 		}
 		
 		/** */
@@ -129,7 +127,6 @@ namespace Straw
 		/** */
 		export async function processImage(inputFile: Fila, outputFolder: Fila, params: ImageParams)
 		{
-			const photon = await getPhoton();
 			const fileCrc = await Util.computeFileCrc(inputFile);
 			const nameNoExt = inputFile.name.slice(0, -inputFile.extension.length);
 			const parts = [nameNoExt, fileCrc];
@@ -215,11 +212,11 @@ namespace Straw
 					if (params.crop)
 					{
 						const c = params.crop;
-						photonImage = photon.crop(photonImage, c[0], c[1], c[2], c[3]);
+						photonImage = Straw.photon.crop(photonImage, c[0], c[1], c[2], c[3]);
 					}
 					
 					if (width !== fallbackWidth || height !== fallbackHeight)
-						photonImage = photon.resize(photonImage, width, height, 5);
+						photonImage = Straw.photon.resize(photonImage, width, height, 5);
 					
 					if (params.hue)
 					{
@@ -227,23 +224,23 @@ namespace Straw
 							(params.hue % 360) / 360 :
 							(360 + params.hue % 360) / 360;
 						
-						photon.hue_rotate_hsl(photonImage, hue);
+						Straw.photon.hue_rotate_hsl(photonImage, hue);
 					}
 					
 					if (params.sat < 0)
-						photon.desaturate_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
+						Straw.photon.desaturate_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
 					
 					if (params.sat > 0)
-						photon.saturate_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
+						Straw.photon.saturate_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
 					
 					if (params.light < 0)
-						photon.darken_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
+						Straw.photon.darken_hsl(photonImage, 1 - Math.max(0, Math.min(1, params.sat)));
 					
 					if (params.light > 0)
-						photon.lighten_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
+						Straw.photon.lighten_hsl(photonImage, Math.max(0, Math.min(1, params.sat)));
 					
 					if (params.blur)
-						photon.gaussian_blur(photonImage, params.blur);
+						Straw.photon.gaussian_blur(photonImage, params.blur);
 					
 					await finalFila.writeBinary(photonImage.get_bytes());
 				}
@@ -259,25 +256,8 @@ namespace Straw
 				throw console.error("File does not exist: " + imageFila.path);
 			
 			const bytes = new Uint8Array(await imageFila.readBinary());
-			const photonImage = (await getPhoton()).PhotonImage.new_from_byteslice(bytes);
+			const photonImage = Straw.photon.PhotonImage.new_from_byteslice(bytes);
 			return photonImage;
 		}
-		
-		/** */
-		async function getPhoton(): Promise<typeof import("@silvia-odwyer/photon-node")>
-		{
-			if (_photon)
-				return _photon;
-			
-			if (NODE)
-				return _photon = require("@silvia-odwyer/photon-node");
-			
-			if (TAURI)
-				return _photon = await Util.getImport("./photon_rs.js");
-			
-			throw new Error("Unsupported platform");
-		}
-		
-		let _photon: typeof import("@silvia-odwyer/photon-node") | null = null;
 	}
 }

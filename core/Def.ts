@@ -31,4 +31,11 @@ namespace Straw
 		generic: [16, 32, 96, 192],
 		appleTouch: [57, 60, 72, 76, 114, 120, 144, 152, 180],
 	};
+	
+	/**
+	 * Defines the prefix to place on a file name in order to have it
+	 * copied from the source folder into the same location within
+	 * the site folder.
+	 */
+	export const copyPrefix = "^";
 }

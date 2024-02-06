@@ -28,10 +28,18 @@
 				"name": "Debug",
 				"type": "node",
 				"request": "launch",
-				"cwd": "${workspaceFolder}",
-				"program": "${workspaceFolder}/+build/straw.debug.js",
+				"cwd": "${workspaceFolder}/cover/site-cover/",
+				"program": "${workspaceFolder}/build/straw.debug.js",
 				"sourceMaps": true,
 			},
+			{
+				"name": "Debug (Chrome)",
+				"type": "chrome",
+				"request": "launch",
+				"port": 9222,
+				"url": "http://localhost:6046/build/index.html",
+				"webRoot": "${workspaceFolder}",
+			}
 			{
 				"name": "Debug Active Cover Function (Node.js)",
 				"type": "node",

@@ -17,15 +17,6 @@ namespace Straw
 		}
 		
 		/**
-		 * Imports a module using the provided specifier.
-		 */
-		export async function getImport(specifier: string)
-		{
-			const asyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-			return await (new asyncFunction("return await import('" + specifier + "')"))();
-		}
-		
-		/**
 		 * Computes a string-based CRC value for the contents of
 		 * the file located at the specified location
 		 */
@@ -34,6 +25,25 @@ namespace Straw
 			const contents = new Uint8Array(await fila.readBinary());
 			const num = Straw.crc32.buf(contents) + (2 ** 32 / 2);
 			return num.toString(36);
+		}
+		
+		/** */
+		export async function findFiles(sourceRoot: Fila, filaFn: (fila: Fila) => boolean)
+		{
+			const filas: Fila[] = [sourceRoot];
+			const indexTsxFiles: Fila[] = [];
+			
+			for (let i = -1; ++i < filas.length;)
+			{
+				const fila = filas[i];
+				if (await fila.isDirectory())
+					filas.push(...await fila.readDirectory());
+				
+				else if (filaFn(fila))
+					indexTsxFiles.push(fila);
+			}
+			
+			return indexTsxFiles;
 		}
 		
 		/**

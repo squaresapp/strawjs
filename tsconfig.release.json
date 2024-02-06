@@ -3,7 +3,10 @@
 	"compilerOptions": {
 		"outFile": "build/straw.js"
 	},
-	"exclude": [
-		"cover/**/*.ts"
+	"include": [
+		"node_modules/@squaresapp/rawjs/*.ts",
+		"node_modules/@squaresapp/fila-*/fila-*.ts",
+		"core/**/*.ts",
+		"core/X.ts"
 	]
 }
