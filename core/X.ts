@@ -22,9 +22,12 @@ namespace Straw
 	 * @internal
 	 * Runs the initialization of StrawJS in the browser.
 	 */
-	export async function maybeSetupBrowser()
+	export async function setup()
 	{
-		Straw.maybeSetupBrowser = () => Promise.resolve();
+		Straw.setup = () => Promise.resolve();
+		
+		if (NODE)
+			return;
 		
 		const promises = [
 			getScript("./photon.js", "photon"),

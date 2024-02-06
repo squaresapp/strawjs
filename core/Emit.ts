@@ -13,9 +13,7 @@ namespace Straw
 		// provides an opportunity for the other parts of the user
 		// code to define pages.
 		await new Promise(r => setTimeout(r));
-		
-		if (!NODE)
-			await Straw.maybeSetupBrowser();
+		await Straw.setup();
 		
 		const root = new Fila(folder);
 		const siteRoot = root.down(ProjectFolder.site);
