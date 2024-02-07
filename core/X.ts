@@ -19,8 +19,9 @@ namespace Straw
 	export declare const Fila: typeof import("@squaresapp/fila");
 	
 	/**
-	 * @internal
-	 * Runs the initialization of StrawJS in the browser.
+	 * Runs the initialization of StrawJS.
+	 * This function automatially runs when calling Straw.init(),
+	 * or when loaded from within Node.js
 	 */
 	export async function setup()
 	{
@@ -30,14 +31,16 @@ namespace Straw
 			return;
 		
 		const promises = [
-			getScript("./photon.js", "photon"),
-			getScript("./typescript.js", "ts"),
-			getScript("./fila.js", "Fila"),
-			getScript("./raw.min.js", "raw")
+			embed("photon.js", "photon"),
+			embed("typescript.js", "ts"),
+			embed("fila.js", "Fila"),
 		];
 		
+		if (typeof raw === "undefined" && typeof Raw === "undefined")
+			promises.push(embed("raw.min.js", "raw"));
+		
 		if (WEB)
-			promises.push(getScript("./keyva.min.js", "Keyva"));
+			promises.push(embed("keyva.min.js", "Keyva"));
 		
 		const deps = await Promise.all(promises);
 		const st = Straw as any;
@@ -54,7 +57,7 @@ namespace Straw
 	 * Imports JavaScript code by temporarily including a <script>
 	 * tag in the browser, and returning it's top-level export.
 	 */
-	function getScript(src: string, exportName: string)
+	export function embed(src: string, exportName = "")
 	{
 		return new Promise<any>(r =>
 		{
@@ -64,21 +67,25 @@ namespace Straw
 				src = base.split("?")[0].split("/").slice(0, -1).join("/") + "/" + src;
 			}
 			
+			const resolve = () => exportName ? new Function("return " + exportName)() : null;
+			
+			if (document.querySelector(`script[src="${src}"]`))
+				return resolve();
+			
 			const script = document.createElement("script");
 			script.src = src;
-			script.onload = () =>
-			{
-				const exp = (new Function("return " + exportName))();
-				script.remove();
-				r(exp);
-			};
+			script.onload = () => r(resolve());
 			document.head.append(script);
 		});
 	}
 	
 	let currentScript: HTMLScriptElement | null = null;
 	
-	if (NODE)
+	/**
+	 * Runs the setup procedure for Node.js.
+	 * Called once, automatically during the initialization of the process.
+	 */
+	function setupNodeJS()
 	{
 		const g = globalThis as any;
 		
@@ -124,9 +131,9 @@ namespace Straw
 		if (require.main === module)
 			setTimeout(() => Straw.emit(process.cwd()));
 	}
+	
+	if (NODE)
+		setupNodeJS();
 	else
-	{
 		currentScript = document.currentScript as HTMLScriptElement;
-		Straw.emit("/");
-	}
 }
