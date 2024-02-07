@@ -47,7 +47,7 @@ namespace Straw
 				else if (param.tagName === "BODY")
 				{
 					body.append(...Array.from(param.childNodes));
-					body.classList.add(...param.className.split(/\s+/));
+					body.classList.add(...param.className.split(/\s+/).filter(s => s));
 					
 					for (const attr of Array.from(param.attributes))
 						if (attr.name !== "class")
