@@ -5,6 +5,12 @@ namespace Straw
 	export namespace Util
 	{
 		/** */
+		export function asArray<T>(maybeArray: T | T[]): T[]
+		{
+			return Array.isArray(maybeArray) ? maybeArray : [maybeArray];
+		}
+		
+		/** */
 		export function tryParseJson<T = any>(json: any): T | null
 		{
 			try
@@ -59,5 +65,38 @@ namespace Straw
 				if (walker.currentNode instanceof HTMLElement)
 					yield walker.currentNode;
 		}
+		
+		/** */
+		export function createIcon(src: string)
+		{
+			const linkTags: HTMLLinkElement[] = [];
+			
+			for (const size of Straw.iconSizes.generic.concat(Straw.iconSizes.appleTouch))
+			{
+				const linkTag = raw.link({
+					rel: Straw.iconSizes.generic.includes(size) ? "icon" : "apple-touch-icon",
+					href: src + `?w=${size}`,
+				});
+				
+				// This attribute has to be assigned explicitly due to a deficiency of happy-dom.
+				// See issue: https://github.com/capricorn86/happy-dom/issues/1185
+				linkTag.setAttribute("sizes", size + "x" + size);
+				linkTags.push(linkTag);
+			}
+			
+			return linkTags;
+		}
+		
+		/** */
+		export function createElement(tagName: string, properties: Record<string, any>, params: Raw.Param[])
+		{
+			const e = document.createElement(tagName);
+			
+			for (const [k, v] of Object.entries(properties))
+				e.setAttribute(k, v);
+			
+			return raw.get(e)(params);
+		}
+		
 	}
 }

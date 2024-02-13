@@ -30,10 +30,6 @@
 		"core/**/*.ts",
 		"core/**/*.tsx",
 		"core/X.ts",
-		"cover/**/*.ts",
-		"cover/**/*.tsx"
-	],
-	"exclude": [
-		"**/support/*.ts"
+		"cover/**/*.ts"
 	]
 }

@@ -11,6 +11,11 @@ namespace Straw
 	/**
 	 * @internal
 	 */
+	export declare const tsvfs: typeof import("@typescript/vfs");
+	
+	/**
+	 * @internal
+	 */
 	export declare const photon: typeof import("@silvia-odwyer/photon-node");
 	
 	/**
@@ -19,38 +24,95 @@ namespace Straw
 	export declare const Fila: typeof import("@squaresapp/fila");
 	
 	/**
-	 * Runs the initialization of StrawJS.
-	 * This function automatially runs when calling Straw.init(),
-	 * or when loaded from within Node.js
+	 * @internal
+	 * TypeScript library .d.ts file definitions.
 	 */
-	export async function setup()
+	export declare const lib: [string, string][];
+	
+	/**
+	 * Runs the initialization of StrawJS.
+	 * In Node.js, this function is called automatically during
+	 * startup and doesn't need to be called again (subsequent
+	 * calls to this method are short-circuited).
+	 * 
+	 * In Node.js, the function is synchronous, and returns void.
+	 * In browsers, the function is asynchronous, and returns
+	 * a Promise<void> which may need to be awaited.
+	 */
+	export function setup(): Promise<void> | void
 	{
-		Straw.setup = () => Promise.resolve();
-		
 		if (NODE)
-			return;
-		
-		const promises = [
-			embed("photon.js", "photon"),
-			embed("typescript.js", "ts"),
-			embed("fila.js", "Fila"),
-		];
-		
-		if (typeof raw === "undefined" && typeof Raw === "undefined")
-			promises.push(embed("raw.min.js", "raw"));
-		
-		if (WEB)
-			promises.push(embed("keyva.min.js", "Keyva"));
-		
-		const deps = await Promise.all(promises);
-		const st = Straw as any;
-		st.photon = deps[0];
-		st.ts = deps[1];
-		st.Fila = deps[2];
-		
-		// This has to be called in order to get our
-		// hacked version of photon working in the browser.
-		await st.photon.init();
+		{
+			Straw.setup = () => {};
+			const g = globalThis as any;
+			
+			const linkedom = require("linkedom");
+			Object.assign(g, linkedom);
+			
+			// Create a baseline document. This document will get re-used
+			// for every page that is generated, though each page gets its
+			// own <head> and <body> elements.
+			const html = "<!DOCTYPE html><html><head></head><body></body></html>";
+			const parsed = linkedom.parseHTML(html);
+			const { window, document } = parsed;
+			g.window = window;
+			g.document = document;
+			
+			const { raw, Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
+			g.Raw = Raw;
+			g.raw = raw;
+			g.t = raw.text.bind(raw);
+			
+			// Setup the default CSS property list in RawJS.
+			for (const name of Straw.cssProperties)
+				if (!Raw.properties.has(name))
+					Raw.properties.add(name);
+			
+			// Monkey-patch the CSSOM dependency (fixes a bug in this library that affects RawJS)
+			const proto = document.createElement("style").sheet!.constructor.prototype;
+			const insertRule = proto.insertRule;
+			proto.insertRule = function(this: any, rule: any, index = this.cssRules.length)
+			{
+				return insertRule.call(this, rule, index);
+			};
+			
+			{
+				const s = Straw as any;
+				s.photon = require("@silvia-odwyer/photon-node");
+				s.ts = require("./typescript.js");
+				s.tsvfs = require("./typescript-vfs.js");
+				s.lib = require("./lib.js");
+				s.Fila = require("@squaresapp/fila").Fila;
+			}
+		}
+		else return (async () =>
+		{
+			Straw.setup = () => Promise.resolve();
+			
+			const promises = [
+				embed("photon.js", "photon"),
+				embed("fila.js", "Fila"),
+				embed("typescript.js", "ts"),
+				embed("typescript-vfs.js", "tsvfs"),
+				embed("lib.js", "lib"),
+			];
+			
+			if (typeof raw === "undefined" && typeof Raw === "undefined")
+				promises.push(embed("raw.min.js", "raw"));
+			
+			if (WEB)
+				promises.push(embed("keyva.min.js", "Keyva"));
+			
+			const deps = await Promise.all(promises);
+			const st = Straw as any;
+			st.photon = deps[0];
+			st.Fila = deps[1];
+			st.ts = deps[2];
+			
+			// This has to be called in order to get our
+			// hacked version of photon working in the browser.
+			await st.photon.init();
+		})();
 	}
 	
 	/**
@@ -67,73 +129,34 @@ namespace Straw
 				src = base.split("?")[0].split("/").slice(0, -1).join("/") + "/" + src;
 			}
 			
-			const resolve = () => exportName ? new Function("return " + exportName)() : null;
+			const getExport = () => exportName ? new Function("return " + exportName)() : null;
 			
 			if (document.querySelector(`script[src="${src}"]`))
-				return resolve();
+				return getExport();
 			
 			const script = document.createElement("script");
 			script.src = src;
-			script.onload = () => r(resolve());
+			script.onload = () =>
+			{
+				r(getExport());
+			};
 			document.head.append(script);
 		});
 	}
 	
 	let currentScript: HTMLScriptElement | null = null;
 	
-	/**
-	 * Runs the setup procedure for Node.js.
-	 * Called once, automatically during the initialization of the process.
-	 */
-	function setupNodeJS()
-	{
-		const g = globalThis as any;
-		
-		const linkedom = require("linkedom");
-		Object.assign(g, linkedom);
-		
-		// Create a baseline document. This document will get re-used
-		// for every page that is generated, though each page gets its
-		// own <head> and <body> elements.
-		const html = "<!DOCTYPE html><html><head></head><body></body></html>";
-		const parsed = linkedom.parseHTML(html);
-		const { window, document } = parsed;
-		g.window = window;
-		g.document = document;
-		
-		const { raw, Raw } = require("@squaresapp/rawjs") as typeof import("@squaresapp/rawjs");
-		g.Raw = Raw;
-		g.raw = raw;
-		g.t = raw.text.bind(raw);
-		
-		// Setup the default CSS property list in RawJS.
-		for (const name of Straw.cssProperties)
-			if (!Raw.properties.has(name))
-				Raw.properties.add(name);
-		
-		// Monkey-patch the CSSOM dependency (fixes a bug in this library that affects RawJS)
-		const proto = document.createElement("style").sheet!.constructor.prototype;
-		const insertRule = proto.insertRule;
-		proto.insertRule = function(this: any, rule: any, index = this.cssRules.length)
-		{
-			return insertRule.call(this, rule, index);
-		};
-		
-		{
-			const s = Straw as any;
-			s.photon = require("@silvia-odwyer/photon-node");
-			s.ts = require("./typescript.js");
-			s.Fila = require("@squaresapp/fila").Fila;
-		}
-		
-		// Auto-emit if StrawJS was being run directly from the command line
-		// (as opposed to be used by the 
-		if (require.main === module)
-			setTimeout(() => Straw.emit(process.cwd()));
-	}
-	
 	if (NODE)
-		setupNodeJS();
+		setup();
 	else
 		currentScript = document.currentScript as HTMLScriptElement;
+	
+	if (typeof module !== "undefined")
+		module.exports = () => new Straw.Program();
+}
+
+declare module "strawjs"
+{
+	type Export = () => Straw.Program;
+	export = Export;
 }
