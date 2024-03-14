@@ -309,16 +309,15 @@ namespace Straw
 				if (!this.typescriptRootNode)
 					throw new Error("Cannot call this method because the page has not been compiled.");
 				
-				this.typescriptRootNode.forEachChild(node =>
-				{
-					if (node.kind === Straw.ts.SyntaxKind.JsxElement)
+				for (const node of Util.walkAbstractSyntaxTree(this.typescriptRootNode))
+					if (node.kind === Straw.ts.SyntaxKind.JsxElement ||
+						node.kind === Straw.ts.SyntaxKind.JsxSelfClosingElement)
 						map.set(node.pos, node);
-				});
 				
 				this.jsxElementNodeMap = map;
 			}
 			
-			return this.jsxElementNodeMap
+			return this.jsxElementNodeMap;
 		}
 		private jsxElementNodeMap: Map<number, TsNode> | null = null;
 		
@@ -352,7 +351,7 @@ namespace Straw
 		/**
 		 * 
 		 */
-		getStrawElementFromDomElement(domElement: HTMLElement): JsxElement | null
+		getStrawElementFromDomElement(domElement: Element): JsxElement | null
 		{
 			let tsNode: TsNode | undefined;
 			
@@ -368,20 +367,23 @@ namespace Straw
 			if (tsNode.kind === Straw.ts.SyntaxKind.JsxElement)
 			{
 				const jsxNode = tsNode as TsJsxElementNode;
-				jsxTagName = jsxNode.openingElement.tagName.getText();
+				jsxTagName = Util.getTagName(jsxNode.openingElement);
 			}
 			else if (tsNode.kind === Straw.ts.SyntaxKind.JsxSelfClosingElement)
 			{
 				const jsxNode = tsNode as TsJsxSelfClosingElementNode;
-				jsxTagName = jsxNode.tagName.getText();
+				jsxTagName = Util.getTagName(jsxNode);
 			}
 			
 			if (!jsxTagName)
 				return null;
 			
-			const definition = this.program.defines.get(jsxTagName);
-			if (!definition)
-				return null;
+			const definition = this.program.defines.get(jsxTagName) || {
+				description: jsxTagName,
+				has: [],
+				markup: [],
+				renderFn: () => {}
+			};
 			
 			return {
 				definition,

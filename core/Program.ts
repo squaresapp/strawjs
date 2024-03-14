@@ -57,7 +57,7 @@ namespace Straw
 			const data: JsxElementDesignerData = {
 				description: designerData.description || "",
 				has: designerData.has || [],
-				markup: designerData.markup || false,
+				markup: designerData.markup || [],
 			};
 			
 			this._defines.set(tag, {

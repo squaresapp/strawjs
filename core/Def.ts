@@ -63,6 +63,9 @@ namespace Straw
 	export type TsJsxSelfClosingElementNode = import("typescript").JsxSelfClosingElement;
 	
 	/** @internal */
+	export type JsxTagNameExpression = import("typescript").JsxTagNameExpression;
+	
+	/** @internal */
 	export type CompilerOptions = import("typescript").CompilerOptions;
 	
 	/** @internal */
@@ -84,7 +87,7 @@ namespace Straw
 	{
 		readonly description: string;
 		readonly has: keyof JSX.IntrinsicElements | (keyof JSX.IntrinsicElements)[],
-		readonly markup: boolean;
+		readonly markup: (keyof JSX.IntrinsicElements)[];
 	}
 	
 	/**

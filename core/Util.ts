@@ -66,6 +66,34 @@ namespace Straw
 					yield walker.currentNode;
 		}
 		
+		/**
+		 * An enumerator that walks through the TypeScript AST,
+		 * depth-first, starting at the specified root node.
+		 */
+		export function * walkAbstractSyntaxTree(sourceFile: import("typescript").SourceFile)
+		{
+			function * recurse(node: TsNode): IterableIterator<TsNode>
+			{
+				yield node;
+				
+				const children = node.getChildren(sourceFile);
+				for (const child of children)
+					yield * recurse(child);
+			}
+			
+			yield * recurse(sourceFile);
+		}
+		
+		/**
+		 * @internal
+		 * Gets the tag name of the specified JsxNode, using an undocumented
+		 * property in the TypeScript compiler API.
+		 */
+		export function getTagName(withTagName: { tagName: JsxTagNameExpression })
+		{
+			return (withTagName.tagName as any).escapedText || "";
+		}
+		
 		/** */
 		export function createIcon(src: string)
 		{
@@ -97,6 +125,5 @@ namespace Straw
 			
 			return raw.get(e)(params);
 		}
-		
 	}
 }

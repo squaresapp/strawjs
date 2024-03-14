@@ -580,21 +580,8 @@ var requireFS = function requireFS() {
 };
 
 const tsvfs = { addAllFilesFromFolder, addFilesForTypesIntoFolder, createDefaultMapFromCDN, createDefaultMapFromNodeModules, createFSBackedSystem, createSystem, createVirtualCompilerHost, createVirtualLanguageServiceHost, createVirtualTypeScriptEnvironment, knownLibFilesForCompilerOptions };
-//# sourceMappingURL=vfs.esm.js.map
 
 return tsvfs;
 })();
 
 typeof module !== "undefined" && (module.exports = tsvfs);
-
-/*
-const getGlobal = function () { 
-  if (typeof self !== 'undefined') { return self; } 
-  if (typeof window !== 'undefined') { return window; } 
-  if (typeof global !== 'undefined') { return global; } 
-  throw new Error('unable to locate global object'); 
-}; 
-
-const globals = getGlobal(); 
-globals.tsvfs = tsvfs;
-*/

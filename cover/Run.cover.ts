@@ -4,7 +4,7 @@ namespace Cover
 	/** */
 	export async function coverStraw()
 	{
-		const directory = process.cwd() + "/sample-site/";
+		const directory = process.cwd() + "/+sample-site/";
 		const straw = new Straw.Program(directory);
 		await straw.compile();
 		

@@ -626,7 +626,7 @@ declare class Raw extends Raw_base {
      * Any Raw.Param values that are strings are converted to DOM Text nodes rather
      * than class names.
      */
-    jsx(tag: string, properties: Record<string, any> | null, ...params: Raw.Param[]): Element;
+    jsx(tag: string | Element, properties?: Record<string, any> | null, ...params: Raw.Param[]): Element;
     /**
      * This is the main applicator method where all params are applied
      * to the target.
@@ -639,11 +639,11 @@ declare class Raw extends Raw_base {
      */
     private apply;
     /** */
-    static readonly Event: {
-        new (target: Node | null, type: string, handler: (ev: Event) => void, options?: Readonly<AddEventListenerOptions>): {
+    static readonly PortableEvent: {
+        new (target: Node | null, type: string, handler: (ev: globalThis.Event) => void, options?: Readonly<AddEventListenerOptions>): {
             readonly target: Node | null;
             readonly type: string;
-            readonly handler: (ev: Event) => void;
+            readonly handler: (ev: globalThis.Event) => void;
             readonly options: Readonly<AddEventListenerOptions>;
             /**
              * Stores the element that "hosts" the event, which is not necessarily
@@ -654,11 +654,11 @@ declare class Raw extends Raw_base {
         };
     };
     /** */
-    on<K extends keyof Raw.EventMap>(type: K, listener: (this: HTMLElement, ev: Raw.EventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.Event;
+    on<K extends keyof Raw.EventMap>(type: K, listener: (this: HTMLElement, ev: Raw.EventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.PortableEvent;
     /** */
-    on<K extends keyof Raw.EventMap>(remoteTarget: Node | Window, type: K, listener: (this: HTMLElement, ev: Raw.EventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.Event;
+    on<K extends keyof Raw.EventMap>(remoteTarget: Node | Window, type: K, listener: (this: HTMLElement, ev: Raw.EventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.PortableEvent;
     /** */
-    on<K extends keyof WindowEventMap>(remoteTarget: Window, type: K, listener: (this: Window, ev: WindowEventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.Event;
+    on<K extends keyof WindowEventMap>(remoteTarget: Window, type: K, listener: (this: Window, ev: WindowEventMap[K]) => any, options?: boolean | EventListenerOptions): Raw.PortableEvent;
     /** */
     private maybeInstallRootObserver;
     private hasInstalledRootObserver;
@@ -795,9 +795,9 @@ declare namespace Raw {
         readonly head: HTMLElement;
     };
     /** */
-    type Param<T = ElementAttribute> = string | Raw.Event | ElementClosure | Param<T>[] | false | void | null | undefined | Promise<void> | INodeLike | Style | Partial<T> | HatLike;
+    type Param<T = ElementAttribute> = string | Raw.PortableEvent | ElementClosure | Param<T>[] | false | void | null | undefined | Promise<void> | INodeLike | Style | Partial<T> | HatLike;
     /** */
-    type ShadowParam = Raw.Event | Raw.ShadowClosure | false | void | null | undefined | ShadowParam[] | Promise<void> | INodeLike;
+    type ShadowParam = Raw.PortableEvent | Raw.ShadowClosure | false | void | null | undefined | ShadowParam[] | Promise<void> | INodeLike;
     /** */
     interface ElementAttribute {
         accesskey: string;
@@ -881,6 +881,8 @@ declare namespace Raw {
         autocorrect: boolean;
         autocomplete: boolean;
         placeholder: string;
+        required: boolean;
+        pattern: string;
     }
     /** */
     interface TextAreaElementAttribute extends ElementAttribute {
@@ -1083,7 +1085,7 @@ declare namespace Raw {
 }
 declare namespace Raw {
     /** */
-    type Event = InstanceType<typeof Raw.Event>;
+    type PortableEvent = InstanceType<typeof Raw.PortableEvent>;
     /** */
     interface EventMap extends HTMLElementEventMap {
         "input": InputEvent;

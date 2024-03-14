@@ -79,8 +79,8 @@ namespace Straw
 			{
 				const s = Straw as any;
 				s.photon = require("@silvia-odwyer/photon-node");
-				s.ts = require("./typescript.js");
-				s.tsvfs = require("./typescript-vfs.js");
+				s.ts = require("./typescript.min.js");
+				s.tsvfs = require("./typescript-vfs.min.js");
 				s.lib = require("./lib.js");
 				s.Fila = require("@squaresapp/fila").Fila;
 			}
@@ -92,8 +92,8 @@ namespace Straw
 			const promises = [
 				embed("photon.js", "photon"),
 				embed("fila.js", "Fila"),
-				embed("typescript.js", "ts"),
-				embed("typescript-vfs.js", "tsvfs"),
+				embed("typescript.min.js", "ts"),
+				embed("typescript-vfs.min.js", "tsvfs"),
 				embed("lib.js", "lib"),
 			];
 			
@@ -111,7 +111,7 @@ namespace Straw
 			
 			// This has to be called in order to get our
 			// hacked version of photon working in the browser.
-			await st.photon.init();
+			//await st.photon.init();
 		})();
 	}
 	
